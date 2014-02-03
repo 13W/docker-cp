@@ -1,0 +1,7 @@
+<div class="form-group">
+    <button type="button" class="btn btn-primary" ng-model="options.all" btn-checkbox data-ng-change="reload()">
+        <i class="glyphicon" data-ng-class="{'glyphicon-unchecked': !options.all, 'glyphicon-check': options.all}"></i>
+        Show All
+    </button>
+</div>
+<dc-grid options="containerOpts"></dc-grid>

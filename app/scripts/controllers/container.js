@@ -2,10 +2,7 @@
 
 angular.module('dockerUiApp').controller('ContainerCtrl', [
     '$scope', '$route', '$timeout', '$location', 'Docker', 'container', function ($scope, $route, $timeout, $location, Docker, container) {
-        $scope.__defineGetter__('active', function () {
-            return !!angular.element('div.scope-container').length;
-        });
-
+        $scope.active = true;
         $scope.container = container;
         $scope.containerId = $route.current.params.containerId
 
@@ -16,15 +13,13 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
         };
         $scope.activeTab = {};
         $scope.processList = function (tab) {
-            if ($scope.active) {
-                if ($scope.containerId && $scope.container.State.Running) {
-                    Docker.processList({p1: $scope.containerId, ps_args: 'axwuu'}, function (processList) {
-                        $scope.container.ps = processList;
-                    });
-                }
-                if ($scope.activeTab[tab]) {
-                    $timeout($scope.processList.bind($scope, tab), 2000);
-                }
+            if ($scope.containerId && $scope.container.State.Running) {
+                Docker.processList({p1: $scope.containerId, ps_args: 'axwuu'}, function (processList) {
+                    $scope.container.ps = processList;
+                });
+            }
+            if ($scope.activeTab[tab] && $scope.active) {
+                $timeout($scope.processList.bind($scope, tab), 2000);
             }
         };
         
@@ -71,9 +66,7 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
         };
         
         function monitor() {
-            if (!$scope.active) {
-                $scope.Console.socket.close();
-            } else {
+            if ($scope.active) {
                 if ($scope.Console.socket.readyState !== 1) {
                     delete $scope.Console.socket;
                     $scope.attachConsole();
@@ -116,4 +109,15 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
                 }
             }
         };
+        
+        $scope.$on('$destroy', function () {
+            $scope.active = false;
+            $scope.activeTab = {};
+            if ($scope.Console.socket) {
+                $scope.Console.socket.close();
+            }
+            if ($scope.Console.terminal) {
+                $scope.Console.terminal.destroy();
+            }
+        })
     }]);

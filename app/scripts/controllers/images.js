@@ -3,7 +3,7 @@
 angular.module('dockerUiApp').controller('ImagesCtrl', [
     '$scope', 'Docker', function ($scope, Docker) {
         $scope.images = [];
-        $scope.options = {all: true};
+        $scope.options = {all: true, tree: true};
 
         function createTree(images, container) {
             var ids = {},
@@ -29,13 +29,16 @@ angular.module('dockerUiApp').controller('ImagesCtrl', [
             return parents;
         }
 
-        $scope.getImages = function () {
+        $scope.reload = function () {
             Docker.images($scope.options, function (images) {
                 $scope.images.splice(0);
-                createTree(images, $scope.images);
-//                images.forEach(function (image) {
-//                    $scope.images.push(image);
-//                });
+                if ($scope.options.tree) {
+                    createTree(images, $scope.images);
+                } else {
+                    images.forEach(function (image) {
+                        $scope.images.push(image);
+                    });
+                }
             });
         };
 
@@ -88,5 +91,12 @@ angular.module('dockerUiApp').controller('ImagesCtrl', [
             nested: true
         };
         
-        $scope.getImages();
+        $scope.destroyImage = function () {
+            if ($scope.imageId)
+            Docker.deleteImage({p1: $scope.imageId}, function (){
+                
+            });
+        };
+        
+        $scope.reload();
     }]);

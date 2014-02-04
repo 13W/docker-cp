@@ -26,10 +26,9 @@ angular.module('dockerUiApp').controller('ImageCtrl', [
         };
         
         $scope.getImage($scope.imageId);
-        $rootScope.$on('$routeChangeStart', function (event, next) {
-            if (!next.params.imageId) {
-                $location.path('/images');
-            } else {
+        // route update?!!!
+        $rootScope.$on('$routeChangeSuccess', function (event, next) {
+            if (next.params.imageId) {
                 $scope.getImage(next.params.imageId.slice(0, 12));
             }
         });

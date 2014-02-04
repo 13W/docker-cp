@@ -33,7 +33,7 @@ angular.module('dockerUiApp').controller('ContainersCtrl', [
                             return e.slice(1)
                         }).join(',');
                     },
-                    link : '/container/{{Id.slice(0,12)}}'
+                    link : '/container/{{ Id.slice(0, 12) }}'
                 },
                 {name: 'Image', field: 'Image'},
                 {name: 'Size', field: 'SizeRw', filter: {name: 'calcMem'}},
@@ -51,8 +51,7 @@ angular.module('dockerUiApp').controller('ContainersCtrl', [
                 return {
                     success: !/^Exit/g.test(data.Status)
                 }
-            },
-            data  : $scope.containers
+            }
         };
         $scope.options = {size: true, all: true};
         $scope.reload = function () {

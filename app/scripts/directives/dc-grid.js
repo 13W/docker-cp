@@ -8,20 +8,49 @@ angular.module('dockerUiApp').directive('dcGrid', [
                     <tr><td data-ng-repeat="def in options.colDef">{{ def.name }}</td></tr>\
                 </thead>\
                 <tbody>\
-                    <tr data-ng-repeat="data in options.data" data-ng-class="rowClass(data)">\
-                        <td ng-repeat="def in options.colDef" data-ng-bind-html="get(data, def)"></td>\
+                    <tr data-ng-repeat-start="row in rows | orderBy:\'Status\':1" data-ng-class="rowClass(row)" data-ng-click="subgrid(row)">\
+                        <td ng-repeat="def in options.colDef" data-ng-bind-html="get(row, def)"></td>\
+                    </tr>\
+                    <tr data-ng-repeat-end data-ng-show="nested && row.Id === active" name="parent-{{ row.Id }}">\
+                        <td colspan="{{ options.colDef.length }}">\
+                            <span style="padding-left: 40px"></span>\
+                        </td>\
                     </tr>\
                 </tbody>\
             </table>',
             restrict: 'E',
+            replace: true,
             scope   : {
-                options: '='
+                options: '=',
+                items: '='
             },
             link: function postLink(scope, element, attrs) {
+                scope.rows = scope.items;
+                scope.nested = !!scope.options.nested;
+                scope.active = null;
+                
                 scope.rowClass = function (data) {
                     if (scope.options.rowClass) {
                         return scope.options.rowClass(data);
                     }
+                };
+                
+                scope.subgrid = function (row) {
+                    if (!scope.nested) {
+                        return;
+                    }
+                    if (!row.children.length || scope.active === row.Id) {
+                        scope.active = null;
+                        return;
+                    }
+                    console.warn(angular.element('parent-' + row.Id));
+                    scope.active = row.Id;
+                    var newScope = scope.$new();
+                    newScope.options = scope.options;
+                    newScope.items = row.children;
+                    angular.element('[name=parent-' + row.Id + '] span')
+                        .html("")
+                        .append($compile('<dc-grid data-options="options" data-items="items"></dc-grid>')(newScope));
                 };
                 
                 scope.get = function (data, def) {
@@ -52,7 +81,6 @@ angular.module('dockerUiApp').directive('dcGrid', [
                     
                     return '<span>' + el + '</span>';
                 };
-                console.log(scope.options);
             }
         };
     }]);

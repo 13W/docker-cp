@@ -77,3 +77,7 @@ body {
     border-bottom: 0;
   }
 }
+
+ul.nav.nav-tabs li{
+    cursor: pointer;
+}

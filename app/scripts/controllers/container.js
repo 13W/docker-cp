@@ -1,12 +1,12 @@
 'use strict';
 
 angular.module('dockerUiApp').controller('ContainerCtrl', [
-    '$scope', '$route', '$timeout', 'Docker', function ($scope, $route, $timeout, Docker) {
+    '$scope', '$route', '$timeout', '$location', 'Docker', 'container', function ($scope, $route, $timeout, $location, Docker, container) {
         $scope.__defineGetter__('active', function () {
             return !!angular.element('div.scope-container').length;
         });
 
-        $scope.container = {State: {Running: false}};
+        $scope.container = container;
         $scope.containerId = $route.current.params.containerId
 
         $scope.getContainer = function () {
@@ -60,6 +60,16 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
             }
         };
 
+        $scope.destroy = function () {
+            if ($scope.containerId) {
+                Docker.destroy({ID: $scope.containerId}, function (complete) {
+                    if (complete) {
+                        $location.path('/containers');
+                    }
+                });
+            }
+        };
+        
         function monitor() {
             if (!$scope.active) {
                 $scope.Console.socket.close();
@@ -106,6 +116,4 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
                 }
             }
         };
-        
-        $scope.getContainer();
     }]);

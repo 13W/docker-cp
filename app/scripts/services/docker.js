@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('dockerUiApp').service('Docker', [
-    '$resource', '$location', '$modal', 'Config', function Docker($resource, $location, $modal, Config) {
+    '$resource', '$modal', 'Config', function Docker($resource, $modal, Config) {
         var Docker = $resource(Config.host + '/:service/:p1/:p2', {service: '@service'}, {
             containers : {
                 method : 'GET',
@@ -12,9 +12,9 @@ angular.module('dockerUiApp').service('Docker', [
                 }
             },
             inspect    : {
-                method: 'GET',
-                iArray: false,
-                params: {
+                method : 'GET',
+                isArray: false,
+                params : {
                     service: 'containers',
                     p1     : '@p1',
                     p2     : 'json'
@@ -65,38 +65,139 @@ angular.module('dockerUiApp').service('Docker', [
                     p2     : 'kill'
                 }
             },
-            _destroy    : {
-                method: 'DELETE',
+            _destroy   : {
+                method : 'DELETE',
+                isArray: false,
+                params : {
+                    service: 'containers',
+                    p1     : '@ID'
+                }
+            },
+            commit: {
+                method: 'POST',
                 isArray: false,
                 params: {
-                    service: 'containers',
+                    service: 'commit',
+                    container: '@ID',
+                    repo: '@repo',
+                    tag: '@tag',
+                    m: '@m',
+                    author: '@author',
+                    run: '@run'
+                }
+            },
+            events     : {
+                method : 'GET',
+                isArray: false,
+                params : {
+                    service: 'events',
+                    p1     : '',
+                    p2     : ''
+                },
+                includeSpinner: false
+            },
+            images     : {
+                method: 'GET',
+                isArray: true,
+                params: {
+                    service: 'images',
+                    p1: 'json'
+                }
+            },
+            createImage     : {
+                method: 'POST',
+                isArray: false,
+                params: {
+                    service: 'images',
+                    p1: 'create',
+                    fromImage: '@fromImage'
+                }
+            },
+            insertToImage: {
+                method: 'POST',
+                isArray: false,
+                params: {
+                    service: 'images',
                     p1: '@ID',
-                    p2: ''
+                    insert: 'insert',
+                    path: '@path',
+                    url: '@url'
+                }
+            },
+            inspectImage: {
+                method: 'GET',
+                isArray: false,
+                params: {
+                    service: 'images',
+                    p1: '@ID',
+                    p2: 'json'
+                }
+            },
+            historyImage: {
+                method: 'GET',
+                isArray: true,
+                params: {
+                    service: 'images',
+                    p1: '@ID',
+                    p2: 'history'
+                }
+            },
+            deleteImage: {
+                method: 'DELETE',
+                isArray: true,
+                params: {
+                    service: 'images',
+                    p1: '@ID'
+                }
+            },
+            searchImage: {
+                method: 'GET',
+                isArray: true,
+                params: {
+                    service: 'images',
+                    p1: 'search'
+                }
+            },
+            info: {
+                method: 'GET',
+                isArray: false,
+                params: {
+                    service: 'info'
+                }
+            },
+            version: {
+                method: 'GET',
+                isArray: false,
+                params: {
+                    service: 'version'
                 }
             }
         });
-        
-        Docker.destroy = function (instance) {
+
+        Docker.destroy = function (instance, callback) {
             $modal.open({
-                template: '<div>Are you sure to want to delete this container?</div>',
-                resolve: {
+                templateUrl  : 'views/destroy-container.html',
+                resolve   : {
                     instance: function () {
                         return instance;
                     }
                 },
                 controller: function ($scope, $modalInstance, instance) {
                     $scope.instance = instance;
-                    
+
                     $scope.ok = function () {
-                        Docker._destroy({ID: instance.Id.slice(0, 12), v: $scope.removeAll}, function () {
-                            $location.path('#!/containers');
-                            $modalInstance.close($scope.selected.item);
+                        Docker._destroy({p1: instance.ID.slice(0, 12), v: $scope.removeAll}, function () {
+                            $modalInstance.close();
+                            callback(true);
                         });
-                    }
+                    };
+                    $scope.close = function () {
+                        $modalInstance.reject();
+                        callback(false);
+                    };
                 }
             });
         };
-        console.log(Docker.destroy);
 
         return Docker;
     }]);

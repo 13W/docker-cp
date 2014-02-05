@@ -78,6 +78,6 @@ body {
   }
 }
 
-ul.nav.nav-tabs li{
+ul.pager li, ul.nav.nav-tabs li{
     cursor: pointer;
 }

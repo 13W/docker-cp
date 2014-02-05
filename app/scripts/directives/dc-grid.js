@@ -1,23 +1,33 @@
 'use strict';
 
 angular.module('dockerUiApp').directive('dcGrid', [
-    '$compile', '$parse', '$filter', function ($compile, $parse, $filter) {
+    '$compile', '$parse', '$rootScope', '$filter', function ($compile, $parse, $rootScope, $filter) {
         return {
-            template: '<table class="table table-hover">\
-                <thead>\
-                    <tr><td data-ng-repeat="def in options.colDef">{{ def.name }}</td></tr>\
-                </thead>\
-                <tbody>\
-                    <tr data-ng-repeat-start="row in rows | orderBy:\'Status\':1" data-ng-class="rowClass(row)" data-ng-click="subgrid(row)">\
-                        <td ng-repeat="def in options.colDef" data-ng-bind-html="get(row, def)"></td>\
-                    </tr>\
-                    <tr data-ng-repeat-end data-ng-show="nested && row.Id === active" name="parent-{{ row.Id }}">\
-                        <td colspan="{{ options.colDef.length }}">\
-                            <span style="padding-left: 40px"></span>\
-                        </td>\
-                    </tr>\
-                </tbody>\
-            </table>',
+            template: '<div>\
+                <div class="row">\
+                    <div class="col-sm-2">\
+                        <pager total-items="totalItems" items-per-page="maxSize" page="currentPage" num-pages="numPages"></pager>\
+                    </div>\
+                    <div class="pager col-sm-1 center-block" style="padding-top: 6px;">\
+                        Page: {{ currentPage }} / {{ numPages }}\
+                    </div>\
+                </div>\
+                <table class="table table-hover">\
+                    <thead>\
+                        <tr><th data-ng-repeat="def in options.colDef">{{ def.name }}</th></tr>\
+                    </thead>\
+                    <tbody>\
+                        <tr data-ng-repeat-start="row in rows | orderBy:\'Status\':1" data-ng-class="rowClass(row)" data-ng-click="subgrid(row)">\
+                            <td ng-repeat="def in options.colDef" data-ng-bind-html="get(row, def)"></td>\
+                        </tr>\
+                        <tr data-ng-repeat-end data-ng-show="nested && row.Id === active" name="parent-{{ row.Id }}">\
+                            <td colspan="{{ options.colDef.length }}">\
+                                <span style="padding-left: 40px"></span>\
+                            </td>\
+                        </tr>\
+                    </tbody>\
+                </table>\
+            </div>',
             restrict: 'E',
             replace: true,
             scope   : {
@@ -25,9 +35,42 @@ angular.module('dockerUiApp').directive('dcGrid', [
                 items: '='
             },
             link: function postLink(scope, element, attrs) {
-                scope.rows = scope.items;
+                scope.currentPage = 1;
+                scope.maxSize = scope.options.maxSize || 10;
                 scope.nested = !!scope.options.nested;
                 scope.active = null;
+                var filtered = [],
+                    progress = false;
+                function init(rows) {
+                    if (!rows.length) {
+                        progress = false;
+                        return;
+                    }
+                    scope.totalItems = rows.length;
+                    scope.rows = rows.slice((scope.currentPage-1) * scope.maxSize, scope.currentPage * scope.maxSize);
+                    progress = false;
+                }
+                scope.$watch('items', function (rows) {
+                    progress = true;
+                    scope.currentPage = 1;
+                    filtered = rows;
+                    init(filtered);
+                });
+                scope.$watch('currentPage', function () {
+                    if (progress) {
+                        return;
+                    }
+                    init(filtered);
+                });
+                if (scope.options.globalFilter) {
+                    $rootScope.$watch('search.value', function (value) {
+                        if (progress) {
+                            return;
+                        }
+                        filtered = $filter('filter')(scope.items, value);
+                        init(filtered);
+                    });
+                }
                 
                 scope.rowClass = function (data) {
                     if (scope.options.rowClass) {
@@ -57,9 +100,16 @@ angular.module('dockerUiApp').directive('dcGrid', [
                     var getter = $parse(def.field),
                         value = getter(scope, data),
                         el = null;
-                    
-                    if (def.map) {
+
+                    data.$watch = function (interpolateFn, setter) {
+                        setter(interpolateFn(data), null);
+                    };
+
+                    if (typeof def.map === 'function') {
                         value = def.map(value);
+                    } else if (typeof def.map === 'string') {
+                        el = angular.element('<div>' + def.map + '</div>');
+                        value = $compile(el)(data).html();
                     }
                     
                     if (def.filter) {
@@ -71,9 +121,6 @@ angular.module('dockerUiApp').directive('dcGrid', [
                     }
                     if (def.link) {
                         el = angular.element('<div><a href="#!' + def.link + '">' + value + '</a></div>');
-                        data.$watch = function (interpolateFn, setter) {
-                            setter(interpolateFn(data), null);
-                        };
                         el = $compile(el)(data).html();
                     } else {
                         el = value;

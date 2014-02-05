@@ -18,10 +18,7 @@ angular.module('dockerUiApp').controller('ImageCtrl', [
                 $scope.image = image;
             });
             Docker.historyImage({p1: imageId}, function (history) {
-                $scope.history.splice(0);
-                history.forEach(function (history) {
-                    $scope.history.push(history);
-                });
+                $scope.history = history;
             });
         };
         
@@ -39,6 +36,7 @@ angular.module('dockerUiApp').controller('ImageCtrl', [
                 {name: 'Created By', field: 'CreatedBy', map: function (e) {return e || ''; }},
                 {name: 'Date', field: 'Created', map: function (e) {return new Date(e*1000)}, filter: 'date'},
                 {name: 'Size', field: 'Size', filter: 'calcMem'}
-            ]
+            ],
+            maxSize: 5
         };
     }]);

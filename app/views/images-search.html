@@ -1,0 +1,11 @@
+<form data-role="form" data-ng-submit="doSearch()">
+    <div class="input-group">
+        <input type="text" class="form-control" data-ng-model="imageSearch" placeholder="Type search here" autofocus="" required=""/>
+    <span class="input-group-btn">
+        <button type="submit" class="btn-primary btn" style="width: 160px;margin-right: 160px;">
+            <i class="glyphicon glyphicon-search"></i> Search Images</button>
+    </span>
+    </div>
+</form>
+
+<dc-grid data-options="imagesOpts" data-items="images"></dc-grid>

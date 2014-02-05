@@ -51,15 +51,13 @@ angular.module('dockerUiApp').controller('ContainersCtrl', [
                 return {
                     success: !/^Exit/g.test(data.Status)
                 }
-            }
+            },
+            globalFilter: true
         };
         $scope.options = {size: true, all: true};
         $scope.reload = function () {
             Docker.containers($scope.options, function (containers) {
-                $scope.containers.splice(0);
-                containers.forEach(function (container) {
-                    $scope.containers.push(container);
-                });
+                $scope.containers = containers;
             });
         };
         

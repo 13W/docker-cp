@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('dockerUiApp').controller('ImagesCtrl', [
-    '$scope', 'Docker', function ($scope, Docker) {
+    '$scope', '$location', 'Docker', function ($scope, $location, Docker) {
         $scope.images = [];
         $scope.options = {all: true, tree: true};
 
@@ -33,11 +33,9 @@ angular.module('dockerUiApp').controller('ImagesCtrl', [
             Docker.images($scope.options, function (images) {
                 $scope.images.splice(0);
                 if ($scope.options.tree) {
-                    createTree(images, $scope.images);
+                    $scope.images = createTree(images);
                 } else {
-                    images.forEach(function (image) {
-                        $scope.images.push(image);
-                    });
+                    $scope.images = images;
                 }
             });
         };
@@ -88,7 +86,8 @@ angular.module('dockerUiApp').controller('ImagesCtrl', [
                     filter: 'calcMem'
                 }
             ],
-            nested: true
+            nested: true,
+            globalFilter: true
         };
         
         $scope.destroyImage = function () {
@@ -98,5 +97,8 @@ angular.module('dockerUiApp').controller('ImagesCtrl', [
             });
         };
         
+        $scope.searchImages = function () {
+            $location.path('/images/search');
+        };
         $scope.reload();
     }]);

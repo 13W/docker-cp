@@ -17,7 +17,7 @@
             <ul class="nav navbar-nav">
                 <li data-ng-model="currentLocation" btn-radio="'/containers'"><a href="#!/containers">Containers</a></li>
                 <li data-ng-model="currentLocation" btn-radio="'/images'"><a href="#!/images">Images</a></li>
-                <li data-ng-model="currentLocation" btn-radio="'/events'"><a href="#!/events">Events</a></li>
+                <li data-ng-model="currentLocation" btn-radio="'/events'" class="disabled"><a href="#!/events" onclick="return false;">Events</a></li>
 <!--
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">Dropdown <b class="caret"></b></a>
@@ -35,7 +35,7 @@
             </ul>
             <form class="navbar-form navbar-left" role="search">
                 <div class="form-group has-feedback" style="position: relative;">
-                    <input type="text" class="form-control" placeholder="Search" style="text-indent: 10px;">
+                    <input type="text" class="form-control" placeholder="Search" style="text-indent: 10px;" data-ng-model="search.value">
                     <i class="glyphicon glyphicon-search form-control-feedback" style="position: absolute; left: 7px;top: 9px;opacity: 0.3"></i>
                 </div>
             </form>
@@ -58,3 +58,4 @@
     </div><!-- /.container-fluid -->
 </nav>
 <div data-app-view-segment="1" class="navbar-form"></div>
+<div class="navbar navbar-inner  navbar-fixed-bottom copyright"><a class="btn-link pull-right small" href="https://github.com/13W">&copy; Vladimir Bulyga</a></div>

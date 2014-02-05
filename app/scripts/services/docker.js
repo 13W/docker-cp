@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('dockerUiApp').service('Docker', [
-    '$resource', '$modal', 'Config', function Docker($resource, $modal, Config) {
+    '$resource', 'stream', '$modal', 'Config', function Docker($resource, stream, $modal, Config) {
         var Docker = $resource(Config.host + '/:service/:p1/:p2', {service: '@service'}, {
             containers : {
                 method : 'GET',
@@ -104,15 +104,6 @@ angular.module('dockerUiApp').service('Docker', [
                     p1: 'json'
                 }
             },
-            createImage     : {
-                method: 'POST',
-                isArray: false,
-                params: {
-                    service: 'images',
-                    p1: 'create',
-                    fromImage: '@fromImage'
-                }
-            },
             insertToImage: {
                 method: 'POST',
                 isArray: false,
@@ -199,5 +190,16 @@ angular.module('dockerUiApp').service('Docker', [
             });
         };
 
+        Docker.createImage = function (options, callback) {
+            var opts = {
+                url: Config.host + '/images/create?' + (options.query || ''),
+                method: options.method || 'POST',
+                parseStream: true,
+                progressHandler: options.progressHandler
+            };
+            
+            stream.request(opts).then(callback);
+        };
+        
         return Docker;
     }]);

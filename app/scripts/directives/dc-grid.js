@@ -1,7 +1,13 @@
 'use strict';
-
+angular.module('dockerUiApp').directive('ngAppendHtml', [
+    '$compile', function ($compile) {
+        return function (scope, element, attr) {
+            element.append($compile(angular.element(scope.$eval(attr.ngAppendHtml)))(scope));
+        }
+    }
+]);
 angular.module('dockerUiApp').directive('dcGrid', [
-    '$compile', '$parse', '$rootScope', '$filter', function ($compile, $parse, $rootScope, $filter) {
+    '$compile', '$parse', '$rootScope', '$filter', '$sce', function ($compile, $parse, $rootScope, $filter, $sce) {
         return {
             template: '<div>\
                 <div class="row">\
@@ -18,7 +24,7 @@ angular.module('dockerUiApp').directive('dcGrid', [
                     </thead>\
                     <tbody>\
                         <tr data-ng-repeat-start="row in rows | orderBy:\'Status\':1" data-ng-class="rowClass(row)" data-ng-click="subgrid(row)">\
-                            <td ng-repeat="def in options.colDef" data-ng-bind-html="get(row, def)"></td>\
+                            <td ng-repeat="def in options.colDef" data-ng-append-html="get(row, def)" data-ng-compile="def.compile"></td>\
                         </tr>\
                         <tr data-ng-repeat-end data-ng-show="nested && row.Id === active" name="parent-{{ row.Id }}">\
                             <td colspan="{{ options.colDef.length }}">\
@@ -82,7 +88,7 @@ angular.module('dockerUiApp').directive('dcGrid', [
                     if (!scope.nested) {
                         return;
                     }
-                    if (!row.children.length || scope.active === row.Id) {
+                    if (!(row.children && row.children.length) || scope.active === row.Id) {
                         scope.active = null;
                         return;
                     }
@@ -96,7 +102,7 @@ angular.module('dockerUiApp').directive('dcGrid', [
                         .append($compile('<dc-grid data-options="options" data-items="items"></dc-grid>')(newScope));
                 };
                 
-                scope.get = function (data, def) {
+                scope.get = function (data, def, $event) {
                     var getter = $parse(def.field),
                         value = getter(scope, data),
                         el = null;
@@ -105,6 +111,14 @@ angular.module('dockerUiApp').directive('dcGrid', [
                         setter(interpolateFn(data), null);
                     };
 
+                    if (Array.isArray(def.buttons)) {
+                        el = '';
+                        def.buttons.forEach(function (button, i) {
+                            el += '<button class="btn ' + button.class + '" data-ng-click="def.buttons[' + i + '].click(row)">' + button.name + '</button>';
+                        });
+                        return el;
+                    }
+                    
                     if (typeof def.map === 'function') {
                         value = def.map(value);
                     } else if (typeof def.map === 'string') {

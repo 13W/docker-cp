@@ -81,3 +81,7 @@ body {
 ul.pager li, ul.nav.nav-tabs li{
     cursor: pointer;
 }
+
+.detail-data {
+    white-space: nowrap;
+}

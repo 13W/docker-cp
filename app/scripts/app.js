@@ -2,7 +2,8 @@
 
 angular.module('dockerUiApp', [
         'ngCookies', 'ngResource', 'ngSanitize', 'ngRoute', 'ui.bootstrap', 'ui.bootstrap.modal', 'route-segment',
-        'view-segment', 'chieffancypants.loadingBar', 'ui.bootstrap.pagination', 'ui.bootstrap.progressbar'])
+        'view-segment', 'chieffancypants.loadingBar', 'ui.bootstrap.pagination', 'ui.bootstrap.progressbar',
+        'ui.bootstrap.alert'])
     .config([
         '$routeProvider', '$locationProvider', '$routeSegmentProvider', 'cfpLoadingBarProvider',
         function ($routeProvider, $locationProvider, $routeSegmentProvider, cfpLoadingBarProvider) {
@@ -14,6 +15,8 @@ angular.module('dockerUiApp', [
             $routeSegmentProvider.options.autoLoadTemplates = true;
             $routeSegmentProvider
                 .when('/', 'root')
+                .when('/set/:key/:value', 'root.set')
+                .when('/info', 'root.info')
                 .when('/events', 'root.events')
                 .when('/container/:containerId', 'root.container')
                 .when('/containers', 'root.containers')
@@ -27,6 +30,21 @@ angular.module('dockerUiApp', [
                     title      : 'Docker.io: Control Panel'
                 })
                 .within()
+                    .segment('set', {
+                        resolve: {
+                            data: ['$location', '$route', 'Config', function ($location, $route, Config) {
+                                var key = $route.current.params.key,
+                                    value = $route.current.params.value;
+                                Config[key] = value;
+                                $location.path('/info');
+                            }]
+                        }
+                    })
+                    .segment('info', {
+                        templateUrl: 'views/info.html',
+                        controller: 'InfoCtrl',
+                        title      : 'Docker.io: Info'
+                    })
                     .segment('event', {
                         templateUrl: 'views/event.html',
                         controller : 'EventCtrl',
@@ -75,6 +93,6 @@ angular.module('dockerUiApp', [
                     });
 
             $routeProvider.otherwise({
-                redirectTo: '/'
+                redirectTo: '/info'
             });
         }]);

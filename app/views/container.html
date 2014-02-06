@@ -19,15 +19,13 @@
 <table class="table" style="width: auto">
     <tr>
         <td>
-            <dl class="dl-horizontal">
+            <dl class="dl-horizontal detail-data">
                 <dt>Hostname</dt>
-                <dd>{{ container.Config.Hostname }}</dd>
-<!--
-                <dt>Domain name</dt>
-                <dd>{{ container.Config.Domainname }}</dd>
--->
+                <dd>{{ container.Config.Hostname }} <strong>{{ container.Config.Domainname }}</strong></dd>
                 <dt>Image</dt>
                 <dd><a href="#!/image/{{ container.Image.slice(0, 12) }}">{{ container.Config.Image }}</a></dd>
+                <dt>Shared CPUs</dt>
+                <dd>{{ container.Confug.CpuShares || 'All' }}</dd>
                 <dt>Memory / SWAP</dt>
                 <dd>{{ container.Config.Memory | calcMem:'bytes':2 }} / {{ container.Config.MemorySwap | calcMem:'bytes':2}}</dd>
                 <dt>Command</dt>
@@ -35,9 +33,11 @@
             </dl>
         </td>
         <td>
-            <dl class="dl-horizontal">
+            <dl class="dl-horizontal detail-data">
                 <dt>Networking</dt>
                 <dd><i data-ng-class="{'glyphicon-unchecked text-muted': container.Config.NetworkDisabled, 'glyphicon-check text-success': !container.Config.NetworkDisabled}" class="glyphicon"></i></dd>
+                <dt>Publish All Ports</dt>
+                <dd><i data-ng-class="{'glyphicon-unchecked text-muted': !container.HostConfig.PublishAllPorts, 'glyphicon-check text-success': container.HostConfig.PublishAllPorts}" class="glyphicon"></i></dd>
                 <dt>IPv4 Address</dt>
                 <dd>{{ container.NetworkSettings.IPAddress }}/{{ container.NetworkSettings.IPPrefixLen }}</dd>
                 <dt>Gateway</dt>
@@ -47,11 +47,7 @@
             </dl>
         </td>
         <td>
-            <dl class="dl-horizontal">
-                <dt>Publish All Ports</dt>
-                <dd><i data-ng-class="{'glyphicon-unchecked text-muted': !container.HostConfig.PublishAllPorts, 'glyphicon-check text-success': container.HostConfig.PublishAllPorts}" class="glyphicon"></i></dd>
-                <dt>Port bindings</dt>
-                <dd ng-repeat="(port, binding) in container.HostConfig.PortBindings">{{ port }} => {{ binding[0].HostIP }}:{{ binding[0].HostPort }}</dd>
+            <dl class="dl-horizontal detail-data">
             </dl>
         </td>
     </tr>
@@ -59,23 +55,54 @@
 
     
 <tabset>
-    <tab heading="Process list" active="activeTab[0]" select="activeTab[0] = true;processList(0)">
-        <pre style="width: auto">
-            <table class="table" style="width: auto;">
-                <thead>
+    <tab heading="Info" active="activeTab[0]" select="activeTab[0] = true;">
+        <table class="table" style="width: 800px;">
+            <thead>
+                <tr><th class="h4 text-center" style="width: 400px;">Mounted volumes</th>
+                    <th class="h4 text-center" style="width: 400px;">Published ports</th></tr>
+            </thead>
+            <tbody>
                 <tr>
-                    <th data-ng-repeat="Title in container.ps.Titles">{{ Title }}</th>
+                    <td>
+                        <table class="table" style="width: 100%">
+                            <thead>
+                                <tr><th>From</th><th>To</th><th>RO/RW</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr data-ng-repeat="(from, to) in container.Volumes"><td>{{ from }}</td><td>{{ to }}</td><td>{{ container.VolumesRW[spath] ? 'RW' : 'RO' }}</td></tr>
+                            </tbody>
+                        </table>
+                    </td>
+                    <td>
+                        <table class="table" style="width: 100%">
+                            <thead>
+                                <tr><th>Local Port/Protocol</th><th>Host ip:port</th></tr>
+                            </thead>
+                            <tbody>
+                            <tr data-ng-repeat="(port, binding) in container.HostConfig.PortBindings"><td>{{ port }}</td><td>{{ binding[0].HostIp }}:{{ binding[0].HostPort }}</td></tr>
+                            </tbody>
+                        </table>
+                    </td>
                 </tr>
-                </thead>
-                <tbody>
-                <tr data-ng-repeat="process in container.ps.Processes">
-                    <td data-ng-repeat="col in process track by $index">{{ col }}</td>
-                </tr>
-                </tbody>
-            </table>
-        </pre>
+            </tbody>
+        </table>
     </tab>
-    <tab heading="Terminal" active="activeTab[1]" select="activeTab[1] = true;attachConsole()">
+    <tab heading="Process list" active="activeTab[1]" select="activeTab[1] = true;processList(0)">
+        <table class="table prev" style="width: auto;">
+            <thead>
+            <tr>
+                <th data-ng-repeat="Title in container.ps.Titles" style="min-width: 70px;">{{ Title }}</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr data-ng-repeat="process in container.ps.Processes">
+                <td data-ng-repeat="col in process track by $index">{{ col }}</td>
+            </tr>
+            </tbody>
+        </table>
+    </tab>
+    <tab heading="Terminal" active="activeTab[2]" select="activeTab[2] = true;attachConsole()">
         <div id="terminal" style="line-height: 1"></div>
     </tab>
+    <tab heading="Json Config" active="activeTab[3]" select="activeTab[3] = true"><pre>{{ container | json }}</pre></tab>
 </tabset>

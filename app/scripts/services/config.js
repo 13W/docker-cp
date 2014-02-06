@@ -1,6 +1,6 @@
 'use strict';
 
 angular.module('dockerUiApp')
-  .constant('Config', {
+  .value('Config', {
         host: "http://localhost:4243"
     });

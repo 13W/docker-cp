@@ -18,6 +18,7 @@ angular.module('dockerUiApp', [
                 .when('/set/:key/:value', 'root.set')
                 .when('/info', 'root.info')
                 .when('/events', 'root.events')
+                .when('/container/create', 'root.createContainer')
                 .when('/container/:containerId', 'root.container')
                 .when('/containers', 'root.containers')
                 .when('/images', 'root.images')
@@ -55,6 +56,11 @@ angular.module('dockerUiApp', [
                         controller : 'EventsCtrl',
                         title      : 'Docker.io: Events'
                     })
+                    .segment('createContainer', {
+                        templateUrl: 'views/create-container.html',
+                        controller : 'CreateContainerCtrl',
+                        title      : 'Docker.io: Create Container'
+                    })
                     .segment('container', {
                         templateUrl: 'views/container.html',
                         controller : 'ContainerCtrl',
@@ -68,7 +74,8 @@ angular.module('dockerUiApp', [
     
                                 return defer.promise;
                             }]
-                        }
+                        },
+                        dependencies: ['containerId']
                     })
                     .segment('containers', {
                         templateUrl: 'views/containers.html',

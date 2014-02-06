@@ -13,7 +13,7 @@
  */
 
 angular.module('dockerUiApp').controller('ContainersCtrl', [
-    '$scope', 'Docker', function ($scope, Docker) {
+    '$scope', '$location', 'Docker', function ($scope, $location, Docker) {
         $scope.containers = [];
         $scope.containerOpts = {
             colDef: [
@@ -60,6 +60,10 @@ angular.module('dockerUiApp').controller('ContainersCtrl', [
                 $scope.containers = containers;
             });
         };
-        
+
+        $scope.createContainer = function () {
+            $location.path('/container/create');
+        };
+
         $scope.reload();
     }]);

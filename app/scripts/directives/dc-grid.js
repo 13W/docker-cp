@@ -20,10 +20,10 @@ angular.module('dockerUiApp').directive('dcGrid', [
                 </div>\
                 <table class="table table-hover">\
                     <thead>\
-                        <tr><th data-ng-repeat="def in options.colDef" style="white-space: nowrap;">{{ def.name }}</th></tr>\
+                        <tr><th data-ng-repeat="def in options.colDef">{{ def.name }}</th></tr>\
                     </thead>\
                     <tbody>\
-                        <tr data-ng-repeat-start="row in rows | orderBy:\'Status\':1" data-ng-class="rowClass(row)" data-ng-click="subgrid(row)" style="min-width: 50px;text-overflow: ellipsis;">\
+                        <tr data-ng-repeat-start="row in rows | orderBy:\'Status\':1" data-ng-class="rowClass(row)" data-ng-click="subgrid(row)" style="min-width: 50px;">\
                             <td ng-repeat="def in options.colDef" data-ng-append-html="get(row, def)" data-ng-compile="def.compile"></td>\
                         </tr>\
                         <tr data-ng-repeat-end data-ng-show="nested && row.Id === active" name="parent-{{ row.Id }}">\

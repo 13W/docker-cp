@@ -85,3 +85,7 @@ ul.pager li, ul.nav.nav-tabs li{
 .detail-data {
     white-space: nowrap;
 }
+
+.dl-info dt {
+    width: 250px;
+}

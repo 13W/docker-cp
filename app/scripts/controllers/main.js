@@ -28,6 +28,4 @@ angular.module('dockerUiApp')
                 cfpLoadingBar.complete();
             }
         });
-        
-        console.warn($http.prototype);
     }]);

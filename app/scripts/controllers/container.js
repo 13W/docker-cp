@@ -109,7 +109,11 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
                 }
             }
         };
-        
+
+        $scope.createAs = function () {
+            $location.path('/container/create');
+        };
+
         $scope.$on('$destroy', function () {
             $scope.active = false;
             $scope.activeTab = {};

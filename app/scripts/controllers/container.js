@@ -4,7 +4,7 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
     '$scope', '$route', '$timeout', '$location', 'Docker', 'container', function ($scope, $route, $timeout, $location, Docker, container) {
         $scope.active = true;
         $scope.container = container;
-        $scope.containerId = $route.current.params.containerId
+        $scope.containerId = $route.current.params.containerId;
 
         $scope.getContainer = function () {
             Docker.inspect({p1: $scope.containerId}, function (container) {
@@ -14,7 +14,7 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
         $scope.activeTab = {};
         $scope.processList = function (tab) {
             if ($scope.containerId && $scope.container.State.Running) {
-                Docker.processList({p1: $scope.containerId, ps_args: 'axwuu'}, function (processList) {
+                Docker.processList({ID: $scope.containerId, ps_args: 'axwuu'}, function (processList) {
                     $scope.container.ps = processList;
                 });
             }
@@ -88,7 +88,7 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
                         screenKeys: true
                     });
 
-                    $scope.Console.socket.onopen = function(event) {
+                    $scope.Console.socket.onopen = function() {
                         monitor();
                     };
 
@@ -96,7 +96,7 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
                         $scope.Console.terminal.write(event.data);
                     };
 
-                    $scope.Console.socket.onclose = function(event) {
+                    $scope.Console.socket.onclose = function() {
                         $scope.Console.terminal.destroy();
                     };
 

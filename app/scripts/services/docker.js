@@ -1,11 +1,99 @@
 'use strict';
 
 angular.module('dockerUiApp').service('Docker', [
-    '$resource', 'stream', '$modal', 'Config', function Docker($resource, stream, $modal, Config) {
-        var Docker = $resource(Config.host + '/:service/:p1/:p2', {service: '@service'}, {
+    '$http', 'stream', '$modal', 'Config', function Docker($http, stream, $modal, Config) {
+        function Docker() {
+            if (!(this instanceof Docker)) {
+                return new Docker();
+            }
+            
+            if (this.servers[Config.host]) {
+                return this.servers[Config.host];
+            }
+            
+            this.servers[Config.host] = this;
+            return this;
+        }
+
+        Docker.prototype.servers = {};
+
+        Docker.prototype.client = function () {
+            return this.servers[Config.host];
+        };
+        
+        function createUrl(map, params) {
+            return map.replace(/(\/:[^/]+)/g, function (a, s) {
+                var key = s.substr(2);
+                if (params.hasOwnProperty(key)) {
+                    var value = params[key];
+                    delete params[key];
+                    return '/' + value;
+                }
+                return '';
+            });
+        }
+        
+        function createParams(map, data) {
+            var params = {},
+                keys = Object.getOwnPropertyNames(map),
+                length = keys.length,
+                k;
+            
+            for (k = 0; k < length; k += 1) {
+                var key = keys[k],
+                    dataKey = map[key],
+                    value = dataKey;
+                
+                if (dataKey[0] === '@') {
+                    value = data[dataKey.substr(1)]
+                } else if (dataKey[0] === '=') {
+                    dataKey = key;
+                    value = data[dataKey];
+                }
+                
+                if (value !== undefined) {
+                    params[key] = value;
+                }
+            }
+            return params;
+        }
+        
+        function createMethod(name, config) {
+            Docker.prototype[name] = function (data, callback) {
+                if (!callback) {
+                    callback = data;
+                    data = {};
+                }
+                
+                var params = createParams(angular.extend({}, config.params), data),
+                    url = createUrl(config.url || '/:service/:p1/:p2', params),
+                    options = {
+                        method: config.method,
+                        url: Config.host + url,
+                        params: params
+                    };
+                
+                if (config.method === 'POST') {
+                    options.data = data;
+                }
+                if (config.withCredentials) {
+                    options.withCredentials = true;
+                }
+                if (config.responseType) {
+                    options.responseType = config.responseType;
+                }
+                if (config.timeout) {
+                    options.timeout = config.timeout;
+                }
+                return $http(options)
+                    .success(callback);
+//                    .error(function ());
+            }
+        }
+        
+        var Methods = {
             containers : {
                 method : 'GET',
-                isArray: true,
                 params : {
                     service: 'containers',
                     p1     : 'json'
@@ -13,7 +101,6 @@ angular.module('dockerUiApp').service('Docker', [
             },
             inspect    : {
                 method : 'GET',
-                isArray: false,
                 params : {
                     service: 'containers',
                     p1     : '@p1',
@@ -22,16 +109,15 @@ angular.module('dockerUiApp').service('Docker', [
             },
             processList: {
                 method : 'GET',
-                isArray: false,
                 params : {
                     service: 'containers',
                     p1     : '@ID',
-                    p2     : 'top'
+                    p2     : 'top',
+                    ps_args: '='
                 }
             },
             start      : {
                 method : 'POST',
-                isArray: false,
                 params : {
                     service: 'containers',
                     p1     : '@ID',
@@ -40,7 +126,6 @@ angular.module('dockerUiApp').service('Docker', [
             },
             stop       : {
                 method : 'POST',
-                isArray: false,
                 params : {
                     service: 'containers',
                     p1     : '@ID',
@@ -49,7 +134,6 @@ angular.module('dockerUiApp').service('Docker', [
             },
             restart    : {
                 method : 'POST',
-                isArray: false,
                 params : {
                     service: 'containers',
                     p1     : '@ID',
@@ -58,7 +142,6 @@ angular.module('dockerUiApp').service('Docker', [
             },
             kill       : {
                 method : 'POST',
-                isArray: false,
                 params : {
                     service: 'containers',
                     p1     : '@ID',
@@ -67,7 +150,6 @@ angular.module('dockerUiApp').service('Docker', [
             },
             _destroy   : {
                 method : 'DELETE',
-                isArray: false,
                 params : {
                     service: 'containers',
                     p1     : '@ID'
@@ -75,20 +157,18 @@ angular.module('dockerUiApp').service('Docker', [
             },
             commit: {
                 method: 'POST',
-                isArray: false,
                 params: {
                     service: 'commit',
-                    container: '@ID',
-                    repo: '@repo',
-                    tag: '@tag',
-                    m: '@m',
-                    author: '@author',
-                    run: '@run'
+                    p1: '@ID',
+                    repo: '=',
+                    tag: '=',
+                    m: '=',
+                    author: '=',
+                    run: '='
                 }
             },
             events     : {
                 method : 'GET',
-                isArray: false,
                 params : {
                     service: 'events',
                     p1     : '',
@@ -98,7 +178,6 @@ angular.module('dockerUiApp').service('Docker', [
             },
             images     : {
                 method: 'GET',
-                isArray: true,
                 params: {
                     service: 'images',
                     p1: 'json'
@@ -106,7 +185,6 @@ angular.module('dockerUiApp').service('Docker', [
             },
             insertToImage: {
                 method: 'POST',
-                isArray: false,
                 params: {
                     service: 'images',
                     p1: '@ID',
@@ -117,7 +195,6 @@ angular.module('dockerUiApp').service('Docker', [
             },
             inspectImage: {
                 method: 'GET',
-                isArray: false,
                 params: {
                     service: 'images',
                     p1: '@ID',
@@ -126,7 +203,6 @@ angular.module('dockerUiApp').service('Docker', [
             },
             historyImage: {
                 method: 'GET',
-                isArray: true,
                 params: {
                     service: 'images',
                     p1: '@ID',
@@ -135,7 +211,6 @@ angular.module('dockerUiApp').service('Docker', [
             },
             deleteImage: {
                 method: 'DELETE',
-                isArray: true,
                 params: {
                     service: 'images',
                     p1: '@ID'
@@ -143,29 +218,37 @@ angular.module('dockerUiApp').service('Docker', [
             },
             searchImage: {
                 method: 'GET',
-                isArray: true,
                 params: {
                     service: 'images',
-                    p1: 'search'
+                    p1: 'search',
+                    term: '='
                 }
             },
             info: {
                 method: 'GET',
-                isArray: false,
                 params: {
                     service: 'info'
                 }
             },
             version: {
                 method: 'GET',
-                isArray: false,
                 params: {
                     service: 'version'
                 }
             }
-        });
+        };
+        
+        var methods = Object.getOwnPropertyNames(Methods),
+            length = methods.length,
+            k;
+        for (k = 0; k < length; k += 1) {
+            var method = methods[k],
+                config = Methods[method];
+            createMethod(method, config);
+        }
 
-        Docker.destroy = function (instance, callback) {
+        Docker.prototype.destroy = function (instance, callback) {
+            var self = this;
             $modal.open({
                 templateUrl  : 'views/destroy-container.html',
                 resolve   : {
@@ -177,7 +260,7 @@ angular.module('dockerUiApp').service('Docker', [
                     $scope.instance = instance;
 
                     $scope.ok = function () {
-                        Docker._destroy({p1: instance.ID.slice(0, 12), v: $scope.removeAll}, function () {
+                        self._destroy({ID: instance.ID.slice(0, 12), v: $scope.removeAll}, function () {
                             $modalInstance.close();
                             callback(true);
                         });
@@ -190,16 +273,16 @@ angular.module('dockerUiApp').service('Docker', [
             });
         };
 
-        Docker.createImage = function (options, callback) {
+        Docker.prototype.createImage = function (options, callback) {
             var opts = {
                 url: Config.host + '/images/create?' + (options.query || ''),
                 method: options.method || 'POST',
                 parseStream: true,
                 progressHandler: options.progressHandler
             };
-            
+
             stream.request(opts).then(callback);
         };
-        
-        return Docker;
+
+        return new Docker;
     }]);

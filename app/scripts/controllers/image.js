@@ -14,10 +14,10 @@ angular.module('dockerUiApp').controller('ImageCtrl', [
 
         $scope.history = [];
         $scope.getImage = function (imageId) {
-            Docker.inspectImage({p1: imageId}, function (image) {
+            Docker.inspectImage({ID: imageId}, function (image) {
                 $scope.image = image;
             });
-            Docker.historyImage({p1: imageId}, function (history) {
+            Docker.historyImage({ID: imageId}, function (history) {
                 $scope.history = history;
             });
         };

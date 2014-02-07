@@ -5,7 +5,6 @@ function int(str) {
     return parseInt(str, 10);
 }
 
-var urlParsingNode = document.createElement("a");
 var msie = int((/msie (\d+)/.exec(lowercase(navigator.userAgent)) || [])[1]);
 if (isNaN(msie)) {
     msie = int((/trident\/.*; rv:(\d+)/.exec(lowercase(navigator.userAgent)) || [])[1]);
@@ -13,10 +12,10 @@ if (isNaN(msie)) {
 
 var XHR = window.XMLHttpRequest || function() {
     /* global ActiveXObject */
-    try { return new ActiveXObject("Msxml2.XMLHTTP.6.0"); } catch (e1) {}
-    try { return new ActiveXObject("Msxml2.XMLHTTP.3.0"); } catch (e2) {}
-    try { return new ActiveXObject("Msxml2.XMLHTTP"); } catch (e3) {}
-//    throw minErr('$httpBackend')('noxhr', "This browser does not support XMLHttpRequest.");
+    try { return new ActiveXObject('Msxml2.XMLHTTP.6.0'); } catch (e1) {}
+    try { return new ActiveXObject('Msxml2.XMLHTTP.3.0'); } catch (e2) {}
+    try { return new ActiveXObject('Msxml2.XMLHTTP'); } catch (e3) {}
+    throw new Error('This browser does not support XMLHttpRequest.');
 };
 
 
@@ -26,7 +25,7 @@ angular.module('dockerUiApp').factory('stream', [
 
         function Request(options) {
 
-            var defer = $q.defer(), xhr = this.xhr = new XHR, headers = options.headers, nextLine = 0, status;
+            var defer = $q.defer(), xhr = this.xhr = new XHR(), headers = options.headers, nextLine = 0, status;
 
             xhr.open(options.method, options.url, true);
 
@@ -37,7 +36,7 @@ angular.module('dockerUiApp').factory('stream', [
             });
 
             xhr.onreadystatechange = function () {
-                if (xhr.readyState == 4) {
+                if (xhr.readyState === 4) {
                     var responseHeaders = null, response = null;
 
                     if (status !== ABORTED) {
@@ -89,11 +88,12 @@ angular.module('dockerUiApp').factory('stream', [
 
                 xhr.onprogress = function () {
                     //readyState: headers received 2, body received 3, done 4
-                    if (xhr.readyState != 2 && xhr.readyState != 3 && xhr.readyState != 4)
+                    if (xhr.readyState !== 2 && xhr.readyState !== 3 && xhr.readyState !== 4) {
                         return;
-                    if (xhr.readyState == 3 && xhr.status != 200)
+                    }
+                    if (xhr.readyState === 3 && xhr.status !== 200) {
                         return;
-
+                    }
                     if (options.parseStream) {
                         options.progressHandler(jsonStreamParser());
                     } else {

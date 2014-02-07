@@ -15,7 +15,7 @@ angular.module('dockerUiApp', [
             $routeSegmentProvider.options.autoLoadTemplates = true;
             $routeSegmentProvider
                 .when('/', 'root')
-                .when('/set/:key/:value', 'root.set')
+                .when('^/set/:key/:value*', 'root.set')
                 .when('/info', 'root.info')
                 .when('/events', 'root.events')
                 .when('/container/create', 'root.createContainer')
@@ -33,11 +33,20 @@ angular.module('dockerUiApp', [
                 .within()
                     .segment('set', {
                         resolve: {
-                            data: ['$location', '$route', 'Config', function ($location, $route, Config) {
-                                var key = $route.current.params.key,
-                                    value = $route.current.params.value;
-                                Config[key] = value;
-                                $location.path('/info');
+                            data: ['$q', '$location', '$route', 'Config', 'Docker', function ($q, $location, $route, Config, Docker) {
+                                var defer = $q.defer();
+                                var key = $route.current.params.key;
+                                Config[key] = $route.current.params.value;
+
+                                Docker
+                                    .version(function (version) {
+                                        defer.resolve(version);
+                                        $location.path('/info');
+                                    })
+                                    .error(function () {
+                                        defer.reject(new Error('Error connecting to host'));
+                                    });
+                                return defer.promise;
                             }]
                         }
                     })

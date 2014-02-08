@@ -1,0 +1,92 @@
+<div class="modal-header">
+    <h3>Create container</h3>
+</div>
+<div class="modal-body">
+    <form class="form-horizontal" role="form">
+        <tabset>
+            <tab heading="Basic">
+                <div class="form-group"><label for="Name" class="col-sm-2 control-label">Name</label>
+                    <div class="col-sm-10"><input type="text" class="form-control" id="Name" placeholder="Container Name"
+                                                  data-ng-model="input.name">
+                    </div>
+                </div>
+                <div class="form-group"><label for="Image" class="col-sm-2 control-label">Image</label>
+                    <div class="col-sm-10"><input type="text" class="form-control" id="Image" placeholder="Image"
+                                                  data-ng-model="input.Image">
+                    </div>
+                </div>
+                <div class="form-group"><label for="Env" class="col-sm-2 control-label">Env Variables</label>
+                    <div class="col-sm-10"><input type="text" class="form-control" id="Env" placeholder="Env" data-ng-model="input.Env">
+                    </div>
+                </div>
+                <div class="form-group"><label for="Cmd" class="col-sm-2 control-label">Command</label>
+                    <div class="col-sm-10"><input type="text" class="form-control" id="Cmd" placeholder="Cmd" data-ng-model="input.Cmd">
+                    </div>
+                </div>
+            </tab>
+            <tab heading="Network">
+                <div class="form-group"><label for="Hostname" class="col-sm-2 control-label">Hostname</label>
+                    <div class="col-sm-10"><input type="text" class="form-control" id="Hostname" placeholder="Hostname"
+                                                  data-ng-model="input.Hostname">
+                    </div>
+                </div>
+                <div class="form-group"><label for="PortSpecs" class="col-sm-2 control-label">PortSpecs</label>
+                    <div class="col-sm-10"><input type="text" class="form-control" id="PortSpecs" placeholder="PortSpecs"
+                                                  data-ng-model="input.PortSpecs">
+                    </div>
+                </div>
+                <div class="form-group"><label for="Dns" class="col-sm-2 control-label">Dns</label>
+                    <div class="col-sm-10"><input type="text" class="form-control" id="Dns" placeholder="Dns" data-ng-model="input.Dns">
+                    </div>
+                </div>
+                <div class="form-group"><label for="ExposedPorts" class="col-sm-2 control-label">Exposed Ports</label>
+                    <div class="col-sm-10"><input type="text" class="form-control" id="ExposedPorts" placeholder="ExposedPorts"
+                                                  data-ng-model="input.ExposedPorts">
+                    </div>
+                </div>
+            </tab>
+            <tab heading="Advanced">
+                <div class="form-group"><label for="Memory" class="col-sm-2 control-label">Memory</label>
+
+                    <div class="col-sm-10"><input type="text" class="form-control" id="Memory" placeholder="Memory"
+                                                  data-ng-model="input.Memory">
+                    </div>
+                </div>
+                <div class="form-group"><label for="MemorySwap" class="col-sm-2 control-label">Swap</label>
+                    <div class="col-sm-10"><input type="text" class="form-control" id="MemorySwap" placeholder="MemorySwap"
+                                                  data-ng-model="input.MemorySwap">
+                    </div>
+                </div>
+                <div class="form-group"><label for="User" class="col-sm-2 control-label">User</label>
+
+                    <div class="col-sm-10"><input type="text" class="form-control" id="User" placeholder="User"
+                                                  data-ng-model="input.User">
+                    </div>
+                </div>
+                <div class="form-group"><label for="WorkingDir" class="col-sm-2 control-label">Working Dir</label>
+                    <div class="col-sm-10"><input type="text" class="form-control" id="WorkingDir" placeholder="WorkingDir"
+                                                  data-ng-model="input.WorkingDir">
+                    </div>
+                </div>
+            </tab>
+            <tab heading="Volumes">
+                <div class="form-group"><label for="Volumes" class="col-sm-2 control-label">Volumes</label>
+                    <div class="col-sm-10"><input type="text" class="form-control" id="Volumes" placeholder="Volumes"
+                                                  data-ng-model="input.Volumes">
+                    </div>
+                </div>
+                <div class="form-group"><label for="VolumesFrom" class="col-sm-2 control-label">Volumes From</label>
+                    <div class="col-sm-10"><input type="text" class="form-control" id="VolumesFrom" placeholder="VolumesFrom"
+                                                  data-ng-model="input.VolumesFrom">
+                    </div>
+                </div>
+            </tab>
+        </tabset>
+    </form>
+<!--
+-->
+</div>
+<div class="modal-footer">
+    <button class="btn btn-success" ng-click="ok()">Create Container</button>
+    <button class="btn btn-warning" ng-click="close()">Cancel</button>
+</div>

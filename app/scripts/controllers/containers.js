@@ -62,7 +62,11 @@ angular.module('dockerUiApp').controller('ContainersCtrl', [
         };
 
         $scope.createContainer = function () {
-            $location.path('/container/create');
+            Docker.createContainer({}, function (response) {
+                if (response) {
+                    $location.path('/container/' + response.Id.slice(0, 12));
+                }
+            });
         };
 
         $scope.reload();

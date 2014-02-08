@@ -13,14 +13,7 @@ angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
                 $scope.images = images;
             });
         };
-        var z = {
-            "star_count": 2, 
-            "is_official": false, 
-            "name": "tutum/hello-world", 
-            "is_trusted": true, 
-            "description": "Image to test docker deployments. Has Apache with a 'Hello World' page listening in port 80."
-        };
-        
+
         function star(e, alt) {
             return '<i class="glyphicon glyphicon-star' + (!e ? '-empty' : '') + '"' + (alt !== undefined ? ' title="' + alt + '"' : '') + '></i>';
         }

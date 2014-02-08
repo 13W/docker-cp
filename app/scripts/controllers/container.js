@@ -111,8 +111,12 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
         };
 
         $scope.createAs = function () {
-            $location.path('/container/create');
-        };
+            Docker.createContainer($scope.container.Config, function (response) {
+                if (response) {
+                    $location.path('/container/' + response.Id.slice(0, 12));
+                }
+            });
+       };
 
         $scope.$on('$destroy', function () {
             $scope.active = false;

@@ -116,6 +116,14 @@ angular.module('dockerUiApp').service('Docker', [
                     ps_args: '='
                 }
             },
+            create     : {
+                method : 'POST',
+                params : {
+                    service: 'containers',
+                    p1     : 'create',
+                    name   : '='
+                }
+            },
             start      : {
                 method : 'POST',
                 params : {
@@ -246,7 +254,44 @@ angular.module('dockerUiApp').service('Docker', [
                 config = Methods[method];
             createMethod(method, config);
         }
-
+        
+        Docker.prototype.createContainer = function (predefined, callback) {
+            var self = this,
+                defaults = {
+                    'Image': 'base',
+                    'Dns': ['8.8.8.8', '8.8.4.4'],
+                    'Tty': true,
+                    'AttachStdin': true,
+                    'AttachStdout': true,
+                    'AttachStderr': true,
+                    'OpenStdin': true,
+                    'StdinOnce': true
+                },
+                input = angular.extend({}, defaults, predefined);
+            $modal.open({
+                templateUrl: 'views/create-container.html',
+                resolve: {
+                    input: function () {
+                        return input;
+                    }
+                },
+                controller: function ($scope, $modalInstance, input) {
+                    $scope.input = input;
+                    
+                    $scope.ok = function () {
+                        self.create($scope.input, function (response) {
+                            $modalInstance.close();
+                            callback(response);
+                        });
+                    };
+                    $scope.close = function () {
+                        $modalInstance.close();
+                        callback(false);
+                    }
+                }
+            })
+        };
+        
         Docker.prototype.destroy = function (instance, callback) {
             var self = this;
             $modal.open({

@@ -59,14 +59,6 @@ angular.module('dockerUiApp').controller('ImagesCtrl', [
                     }
                 },
                 {
-                    name  : 'Created',
-                    field : 'Created',
-                    map   : function (e) {
-                        return new Date(e * 1000);
-                    },
-                    filter: {name: 'date'}
-                },
-                {
                     name : 'Tags',
                     field: 'RepoTags',
                     map  : function (e) {
@@ -84,6 +76,19 @@ angular.module('dockerUiApp').controller('ImagesCtrl', [
                     name: 'Size',
                     field: 'Size',
                     filter: 'calcMem'
+                },
+                {
+                    name: 'Virtual Size',
+                    field: 'VirtualSize',
+                    filter: 'calcMem'
+                },
+                {
+                    name  : 'Created',
+                    field : 'Created',
+                    map   : function (e) {
+                        return new Date(e * 1000);
+                    },
+                    filter: {name: 'date'}
                 }
             ],
             nested: true,

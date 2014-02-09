@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('dockerUiApp').service('Docker', [
-    '$http', 'stream', '$modal', 'Config', function Docker($http, stream, $modal, Config) {
+    '$q', '$filter', '$http', 'stream', '$modal', 'Config', function Docker($q, $filter, $http, stream, $modal, Config) {
         function Docker() {
             if (!(this instanceof Docker)) {
                 return new Docker();
@@ -267,6 +267,9 @@ angular.module('dockerUiApp').service('Docker', [
             var self = this,
                 defaults = {
                     'Image': 'base',
+                    'PortSpecs': [],
+                    'ExposedPorts': [],
+                    'Env': [],
                     'Dns': ['8.8.8.8', '8.8.4.4'],
                     'Tty': true,
                     'AttachStdin': true,
@@ -285,6 +288,26 @@ angular.module('dockerUiApp').service('Docker', [
                 },
                 controller: function ($scope, $modalInstance, input) {
                     $scope.input = input;
+                    $scope.images = [];
+                    
+                    function filter(term) {
+                        return $filter('filter')($scope.images, term);
+                    }
+                    
+                    $scope.getImage = function (term) {
+                        if (!$scope.images.length) {
+                            return self.images(function (images) {
+                                $scope.images = images.map(function (image) {
+                                    return image.RepoTags[0];
+                                });
+                                return filter(term);
+                            });
+                        } else {
+                            var def = $q.defer();
+                            def.resolve(filter(term));
+                            return def.promise;
+                        }
+                    };
                     
                     $scope.ok = function () {
                         self.create($scope.input, function (response) {

@@ -3,7 +3,7 @@
 angular.module('dockerUiApp', [
         'ngCookies', 'ngResource', 'ngSanitize', 'ngRoute', 'ui.bootstrap', 'ui.bootstrap.modal', 'route-segment',
         'view-segment', 'chieffancypants.loadingBar', 'ui.bootstrap.pagination', 'ui.bootstrap.progressbar',
-        'ui.bootstrap.alert'])
+        'ui.bootstrap.alert', 'decipher.tags', 'ui.bootstrap.typeahead'])
     .config([
         '$routeProvider', '$locationProvider', '$routeSegmentProvider', 'cfpLoadingBarProvider',
         function ($routeProvider, $locationProvider, $routeSegmentProvider, cfpLoadingBarProvider) {

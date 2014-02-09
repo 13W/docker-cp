@@ -14,10 +14,15 @@
     "angular-ui-bower": "~0.4.0",
     "angular-ui-bootstrap-bower": "~0.10.0",
     "angular-route-segment": "~1.2.0",
-    "angular-spinner-loading": "*"
+    "angular-spinner-loading": "*",
+    "angular-tags": "~0.2.10"
   },
   "devDependencies": {
     "angular-mocks": "1.2.6",
     "angular-scenario": "1.2.6"
+  },
+  "resolutions": {
+    "angular": "1.2.6",
+    "angular-ui-bootstrap-bower": "~0.10.0"
   }
 }

@@ -124,6 +124,14 @@ angular.module('dockerUiApp').service('Docker', [
                     name   : '='
                 }
             },
+            changes    : {
+                method : 'GET',
+                params : {
+                    service: 'containers',
+                    p1     : '@ID',
+                    p2     : 'changes'
+                }
+            },
             start      : {
                 method : 'POST',
                 params : {

@@ -104,5 +104,8 @@
     <tab heading="Terminal" active="activeTab[2]" select="activeTab[2] = true;attachConsole()">
         <div id="terminal" style="line-height: 1"></div>
     </tab>
-    <tab heading="Json Config" active="activeTab[3]" select="activeTab[3] = true"><pre>{{ container | json }}</pre></tab>
+    <tab heading="Changes" active="activeTab[3]" select="activeTab[3] = true;getChanges()">
+        <dc-grid data-options="changesOpts" data-items="changes" style="padding: 0;"></dc-grid>
+    </tab>
+    <tab heading="Json Config" active="activeTab[4]" select="activeTab[4] = true"><pre>{{ container | json }}</pre></tab>
 </tabset>

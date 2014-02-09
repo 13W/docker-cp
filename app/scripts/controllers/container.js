@@ -5,6 +5,7 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
         $scope.active = true;
         $scope.container = container;
         $scope.containerId = $route.current.params.containerId;
+        $scope.changes = [];
 
         $scope.getContainer = function () {
             Docker.inspect({p1: $scope.containerId}, function (container) {
@@ -109,7 +110,25 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
                 }
             }
         };
-
+        
+        $scope.changesOpts = {
+            colDef: [
+                {name: 'Filename', field: 'Path'}
+            ],
+            rowClass: function (row) {
+                return {
+                    'warning': !!row.Kind
+                }
+            },
+            maxSize: 5
+        };
+        
+        $scope.getChanges = function () {
+            Docker.changes({ID: $scope.containerId}, function (changes) {
+                $scope.changes = changes;
+            });
+        };
+        
         $scope.createAs = function () {
             Docker.createContainer($scope.container.Config, function (response) {
                 if (response) {

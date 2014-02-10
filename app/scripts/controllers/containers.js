@@ -23,7 +23,7 @@ angular.module('dockerUiApp').controller('ContainersCtrl', [
                     map  : function (e) {
                         return e.slice(0, 12)
                     },
-                    link : '/container/{{Id.slice(0,12)}}'
+                    link : '/container/{{Id | shortTag}}'
                 },
                 {
                     name : 'Name',
@@ -33,7 +33,7 @@ angular.module('dockerUiApp').controller('ContainersCtrl', [
                             return e.slice(1)
                         }).join(',');
                     },
-                    link : '/container/{{ Id.slice(0, 12) }}'
+                    link : '/container/{{ Id | shortTag }}'
                 },
                 {name: 'Image', field: 'Image'},
                 {name: 'Size', field: 'SizeRw', filter: {name: 'calcMem'}},

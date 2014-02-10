@@ -77,7 +77,7 @@ angular.module('dockerUiApp', [
                         resolve    : {
                             container: ['$q', '$route', 'Docker', function ($q, $route, Docker) {
                                 var containerId = $route.current.params.containerId, defer = $q.defer();
-                                Docker.inspect({p1: containerId}, function (container) {
+                                Docker.inspect({ID: containerId}, function (container) {
                                     defer.resolve(container);
                                 });
     

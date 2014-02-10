@@ -84,10 +84,11 @@
                               data-model="input.Volumes" style="padding-top: 0 !important;"></tags>
                     </div>
                 </div>
-                <div class="form-group"><label class="col-sm-2 control-label">Volumes From</label>
+                <div class="form-group"><label for="VolumesFrom" class="col-sm-2 control-label">Volumes From</label>
                     <div class="col-sm-10">
-                        <tags data-options="{addable: true}"
-                              data-model="input.VolumesFrom" style="padding-top: 0 !important;"></tags>
+                        <input type="text" class="form-control" id="VolumesFrom" placeholder="Volumes From"
+                               data-ng-model="input.VolumesFrom"
+                               typeahead="img for img in getContainer($viewValue) | filter:$viewValue">
                     </div>
                 </div>
             </tab>

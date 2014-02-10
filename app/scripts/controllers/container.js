@@ -8,7 +8,7 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
         $scope.changes = [];
 
         $scope.getContainer = function () {
-            Docker.inspect({p1: $scope.containerId}, function (container) {
+            Docker.inspect({ID: $scope.containerId}, function (container) {
                 $scope.container = container;
             });
         };
@@ -61,6 +61,16 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
                 Docker.destroy({ID: $scope.containerId}, function (complete) {
                     if (complete) {
                         $location.path('/containers');
+                    }
+                });
+            }
+        };
+        
+        $scope.commit = function () {
+            if ($scope.containerId) {
+                Docker.commit($scope.container, function (complete) {
+                    if (complete) {
+                        $location.path('/image/' + complete.Id.slice(0, 12));
                     }
                 });
             }

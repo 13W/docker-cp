@@ -149,6 +149,9 @@ angular.module('dockerUiApp').directive('dcGrid', [
                         el = value;
                     }
                     
+                    if (el === undefined) {
+                        el = '';
+                    }
                     return '<span>' + el + '</span>';
                 };
             }

@@ -90,161 +90,164 @@ angular.module('dockerUiApp').service('Docker', [
 //                    .error(function ());
             }
         }
-        
+
         var Methods = {
-            containers : {
-                method : 'GET',
-                params : {
+            containers   : {
+                method: 'GET',
+                params: {
                     service: 'containers',
-                    p1     : 'json'
+                    p1     : 'json',
+                    size   : '=',
+                    all    : '='
                 }
             },
-            inspect    : {
-                method : 'GET',
-                params : {
+            inspect      : {
+                method: 'GET',
+                params: {
                     service: 'containers',
-                    p1     : '@p1',
+                    p1     : '@ID',
                     p2     : 'json'
                 }
             },
-            processList: {
-                method : 'GET',
-                params : {
+            processList  : {
+                method: 'GET',
+                params: {
                     service: 'containers',
                     p1     : '@ID',
                     p2     : 'top',
                     ps_args: '='
                 }
             },
-            create     : {
-                method : 'POST',
-                params : {
+            create       : {
+                method: 'POST',
+                params: {
                     service: 'containers',
                     p1     : 'create',
                     name   : '='
                 }
             },
-            changes    : {
-                method : 'GET',
-                params : {
+            changes      : {
+                method: 'GET',
+                params: {
                     service: 'containers',
                     p1     : '@ID',
                     p2     : 'changes'
                 }
             },
-            start      : {
-                method : 'POST',
-                params : {
+            start        : {
+                method: 'POST',
+                params: {
                     service: 'containers',
                     p1     : '@ID',
                     p2     : 'start'
                 }
             },
-            stop       : {
-                method : 'POST',
-                params : {
+            stop         : {
+                method: 'POST',
+                params: {
                     service: 'containers',
                     p1     : '@ID',
                     p2     : 'stop'
                 }
             },
-            restart    : {
-                method : 'POST',
-                params : {
+            restart      : {
+                method: 'POST',
+                params: {
                     service: 'containers',
                     p1     : '@ID',
                     p2     : 'restart'
                 }
             },
-            kill       : {
-                method : 'POST',
-                params : {
+            kill         : {
+                method: 'POST',
+                params: {
                     service: 'containers',
                     p1     : '@ID',
                     p2     : 'kill'
                 }
             },
-            _destroy   : {
-                method : 'DELETE',
-                params : {
+            _destroy     : {
+                method: 'DELETE',
+                params: {
                     service: 'containers',
                     p1     : '@ID'
                 }
             },
-            commit: {
+            _commit       : {
                 method: 'POST',
                 params: {
                     service: 'commit',
-                    p1: '@ID',
-                    repo: '=',
-                    tag: '=',
-                    m: '=',
-                    author: '=',
-                    run: '='
+                    container: '=',
+                    repo   : '=',
+                    tag    : '=',
+                    m      : '=',
+                    author : '=',
+                    run    : '='
                 }
             },
-            images     : {
+            images       : {
                 method: 'GET',
                 params: {
                     service: 'images',
-                    p1: 'json'
+                    p1     : 'json',
+                    all    : '='
                 }
             },
             insertToImage: {
                 method: 'POST',
                 params: {
                     service: 'images',
-                    p1: '@ID',
-                    insert: 'insert',
-                    path: '@path',
-                    url: '@url'
+                    p1     : '@ID',
+                    insert : 'insert',
+                    path   : '=',
+                    url    : '='
                 }
             },
-            inspectImage: {
+            inspectImage : {
                 method: 'GET',
                 params: {
                     service: 'images',
-                    p1: '@ID',
-                    p2: 'json'
+                    p1     : '@ID',
+                    p2     : 'json'
                 }
             },
-            historyImage: {
+            historyImage : {
                 method: 'GET',
                 params: {
                     service: 'images',
-                    p1: '@ID',
-                    p2: 'history'
+                    p1     : '@ID',
+                    p2     : 'history'
                 }
             },
-            deleteImage: {
+            deleteImage  : {
                 method: 'DELETE',
                 params: {
                     service: 'images',
-                    p1: '@ID'
+                    p1     : '@ID'
                 }
             },
-            searchImage: {
+            searchImage  : {
                 method: 'GET',
                 params: {
                     service: 'images',
-                    p1: 'search',
-                    term: '='
+                    p1     : 'search',
+                    term   : '='
                 }
             },
-            info: {
+            info         : {
                 method: 'GET',
                 params: {
                     service: 'info'
                 }
             },
-            version: {
+            version      : {
                 method: 'GET',
                 params: {
                     service: 'version'
                 }
             }
         };
-        
+
         var methods = Object.getOwnPropertyNames(Methods),
             length = methods.length,
             k;
@@ -267,7 +270,9 @@ angular.module('dockerUiApp').service('Docker', [
                     'AttachStdout': true,
                     'AttachStderr': true,
                     'OpenStdin': true,
-                    'StdinOnce': true
+                    'StdinOnce': true,
+                    'Volumes': [],
+                    'VolumesFrom': []
                 },
                 input = angular.extend({}, defaults, predefined);
             $modal.open({
@@ -280,9 +285,10 @@ angular.module('dockerUiApp').service('Docker', [
                 controller: function ($scope, $modalInstance, input) {
                     $scope.input = input;
                     $scope.images = [];
+                    $scope.containers = [];
                     
-                    function filter(term) {
-                        return $filter('filter')($scope.images, term);
+                    function filter(array, term) {
+                        return $filter('filter')(array, term);
                     }
                     
                     $scope.getImage = function (term) {
@@ -291,11 +297,26 @@ angular.module('dockerUiApp').service('Docker', [
                                 $scope.images = images.map(function (image) {
                                     return image.RepoTags[0];
                                 });
-                                return filter(term);
+                                return filter($scope.images, term);
                             });
                         } else {
                             var def = $q.defer();
-                            def.resolve(filter(term));
+                            def.resolve(filter($scope.images, term));
+                            return def.promise;
+                        }
+                    };
+                    
+                    $scope.getContainer = function (term) {
+                        if (!$scope.containers.length) {
+                            return self.containers({all: true}, function (containers) {
+                                $scope.containers = containers.map(function (container) {
+                                    return container.Names[0].substr(1);
+                                });
+                                return filter($scope.containers, term);
+                            });
+                        } else {
+                            var def = $q.defer();
+                            def.resolve(filter($scope.containers, term));
                             return def.promise;
                         }
                     };
@@ -333,7 +354,37 @@ angular.module('dockerUiApp').service('Docker', [
                         });
                     };
                     $scope.close = function () {
-                        $modalInstance.reject();
+                        $modalInstance.close();
+                        callback(false);
+                    };
+                }
+            });
+        };
+
+        Docker.prototype.commit = function (instance, callback) {
+            var self = this;
+            $modal.open({
+                templateUrl  : 'views/commit-container.html',
+                resolve   : {
+                    instance: function () {
+                        return instance;
+                    }
+                },
+                controller: function ($scope, $modalInstance, instance) {
+                    $scope.instance = instance;
+                    $scope.input = {
+                        repo: instance.Name.substr(1),
+                        container: instance.ID.slice(0, 12)
+                    };
+
+                    $scope.ok = function () {
+                        self._commit($scope.input, function (result) {
+                            callback(result);
+                            $modalInstance.close();
+                        });
+                    };
+                    $scope.close = function () {
+                        $modalInstance.close();
                         callback(false);
                     };
                 }
@@ -348,7 +399,9 @@ angular.module('dockerUiApp').service('Docker', [
                 progressHandler: options.progressHandler
             };
 
-            return stream.request(opts).then(callback);
+            var request = stream.request(opts);
+            request.then(callback);
+            return request;
         };
 
         Docker.prototype.events = function (since, progressHandler, callback) {

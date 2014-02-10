@@ -2,7 +2,7 @@
 <span class="text-muted h3">Image: </span>
 <h3 style="display: inline !important;width: 150px">
     <strong>{{ image.Name.slice(1).toUpperCase() }}</strong>
-    <small>{{ image.id.slice(0, 12) }} From {{ image.created | date }}</small>
+    <small>{{ image.id| shortTag }} From {{ image.created | date }}</small>
 </h3>
 <button class="pull-right btn-xs btn-danger btn" data-ng-disabled="container.State.Running" data-ng-click="destroyImage()"
         style="width: 80px">
@@ -11,11 +11,11 @@
 <hr/>
 <dl class="dl-horizontal">
     <dt>Id</dt>
-    <dd>{{ image.id.slice(0, 12) }}</dd>
+    <dd>{{ image.id| shortTag }}</dd>
     <dt>Parent</dt>
-    <dd><a data-ng-href="#!/image/{{ image.parent.slice(0, 12) }}">{{ image.parent.slice(0, 12) }}</a></dd>
+    <dd><a data-ng-href="#!/image/{{ image.parent| shortTag }}">{{ image.parent| shortTag }}</a></dd>
     <dt>Container</dt>
-    <dd><a data-ng-href="#!/container/{{ image.container.slice(0, 12) }}">{{ image.container.slice(0, 12) }}</a></dd>
+    <dd><a data-ng-href="#!/container/{{ image.container| shortTag }}">{{ image.container| shortTag }}</a></dd>
     <dt>Created</dt>
     <dd>{{ image.created | date }}</dd>
     <dt>OS</dt>

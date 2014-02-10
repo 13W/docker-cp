@@ -48,12 +48,12 @@ angular.module('dockerUiApp').controller('ImagesCtrl', [
                     map  : function (e) {
                         return e.slice(0, 12)
                     },
-                    link : '/image/{{ Id.slice(0, 12) }}'
+                    link : '/image/{{ Id | shortTag }}'
                 },
                 {
                     name : 'Name',
                     field: 'RepoTags',
-                    link : '/image/{{ Id.slice(0, 12) }}',
+                    link : '/image/{{ Id | shortTag }}',
                     map  : function (e) {
                         return e[0].split(':')[0]
                     }
@@ -97,7 +97,7 @@ angular.module('dockerUiApp').controller('ImagesCtrl', [
         
         $scope.destroyImage = function () {
             if ($scope.imageId)
-            Docker.deleteImage({p1: $scope.imageId}, function (){
+            Docker.deleteImage({ID: $scope.imageId}, function (){
                 
             });
         };

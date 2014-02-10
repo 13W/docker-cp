@@ -23,7 +23,7 @@ angular.module('dockerUiApp')
         $rootScope.alert = $scope.alert = {value: null};
         $scope.currentLocation = $location.$$path.split('/').slice(0, 2).join('/');
         $rootScope.$on('$routeChangeSuccess', function (event, next) {
-            $scope.currentLocation = next.$$route.originalPath || $location.$$path.split('/').slice(0, 2).join('/');
+            $scope.currentLocation = (next.$$route && next.$$route.originalPath) || $location.$$path.split('/').slice(0, 2).join('/');
             if (cfpLoadingBar.status()) {
                 cfpLoadingBar.complete();
             }

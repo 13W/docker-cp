@@ -24,8 +24,15 @@ angular.module('dockerUiApp').directive('dcGrid', [
                         <tr><th data-ng-repeat="def in options.colDef">{{ def.name }}</th></tr>\
                     </thead>\
                     <tbody>\
-                        <tr data-ng-repeat-start="row in rows | orderBy:\'Status\':1" data-ng-class="rowClass(row)" data-ng-click="subgrid(row)" style="min-width: 50px;">\
-                            <td ng-repeat="def in options.colDef" data-ng-append-html="get(row, def)" data-ng-compile="def.compile"></td>\
+                        <tr data-ng-repeat-start="row in rows | orderBy:\'Status\':1" \
+                            data-ng-class="rowClass(row)" \
+                            data-ng-click="subgrid(row)" \
+                            style="min-width: 50px;">\
+                            <td data-ng-repeat="def in options.colDef" \
+                                data-ng-append-html="get(row, def)" \
+                                data-ng-compile="def.compile" \
+                                style="{{def.style}}" \
+                                data-ng-class="def.class"></td>\
                         </tr>\
                         <tr data-ng-repeat-end data-ng-show="nested && row.Id === active" data-name="parent-{{ row.Id }}">\
                             <td colspan="{{ options.colDef.length }}">\

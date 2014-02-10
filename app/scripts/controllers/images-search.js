@@ -104,9 +104,14 @@ angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
                 {name: 'Trusted', field: 'is_trusted', map: star},
                 {name: 'Official', field: 'is_official', map: star},
                 {name: 'Rating', field: 'star_count', map: rating},
-                {name: 'Description', field: 'description', map: function (e) {
-                    return e.slice(0, 100) + '...';
-                }},
+                {
+                    name: 'Description', 
+                    field: 'description', 
+                    style: "max-width: 500px;white-space: nowrap; overflow: hidden; text-overflow: ellipsis;",
+                    map: function (e) {
+                        return '<span popover="{{ row.description }}" popover-trigger="mouseenter">{{ row.description }}</span>';
+                    }
+                },
                 {name     : 'Actions', buttons: [
                     {
                         name : '<i class="glyphicon glyphicon-download"></i> Download',

@@ -56,7 +56,7 @@ angular.module('dockerUiApp').directive('dcGrid', [
                     scope.rows = rows.slice((scope.currentPage-1) * scope.maxSize, scope.currentPage * scope.maxSize);
                     progress = false;
                 }
-                scope.$watch('items', function (rows) {
+                scope.$watchCollection('items', function (rows) {
                     progress = true;
                     scope.currentPage = 1;
                     filtered = rows;

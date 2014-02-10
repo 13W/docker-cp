@@ -102,7 +102,11 @@ angular.module('dockerUiApp').factory('stream', [
                     }
                 };
             }
-
+            
+            xhr.onerror = function (error) {
+                console.error(error);
+            };
+            
             if (options.withCredentials) {
                 xhr.withCredentials = true;
             }
@@ -121,7 +125,9 @@ angular.module('dockerUiApp').factory('stream', [
                 status = ABORTED;
                 xhr && xhr.abort();
             }
-
+            defer.promise.abort = function () {
+                xhr && xhr.abort();
+            };
             return defer.promise;
         }
 

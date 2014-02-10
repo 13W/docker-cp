@@ -183,15 +183,6 @@ angular.module('dockerUiApp').service('Docker', [
                     run: '='
                 }
             },
-            events     : {
-                method : 'GET',
-                params : {
-                    service: 'events',
-                    p1     : '',
-                    p2     : ''
-                },
-                includeSpinner: false
-            },
             images     : {
                 method: 'GET',
                 params: {
@@ -357,8 +348,20 @@ angular.module('dockerUiApp').service('Docker', [
                 progressHandler: options.progressHandler
             };
 
-            stream.request(opts).then(callback);
+            return stream.request(opts).then(callback);
         };
 
+        Docker.prototype.events = function (since, progressHandler, callback) {
+            var opts = {
+                url: Config.host + '/events?' + since || 'since=1',
+                method: 'GET',
+                parseStream: true,
+                progressHandler: progressHandler
+            };
+            var request = stream.request(opts);
+            request.then(callback);
+            return request;
+        };
+        
         return new Docker;
     }]);

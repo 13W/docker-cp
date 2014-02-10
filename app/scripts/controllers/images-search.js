@@ -90,6 +90,7 @@ angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
                             }
                             ptr.status = data.status;
                         });
+                        $scope.$apply();
                     }
                 }
             }, function () {

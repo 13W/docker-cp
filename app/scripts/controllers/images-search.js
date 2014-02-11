@@ -14,13 +14,13 @@ angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
             });
         };
 
-        function star(e, alt) {
+        function star(e, data, alt) {
             return '<i class="glyphicon glyphicon-star' + (!e ? '-empty' : '') + '"' + (alt !== undefined ? ' title="' + alt + '"' : '') + '></i>';
         }
         
         function rating(e) {
             var rating = Math.round(!$scope.maxRate ? 0 : e/$scope.maxRate*5);
-            return [1,2,3,4,5].map(function (o, i) { return star(rating && i <= rating, e) }).join('');
+            return [1,2,3,4,5].map(function (o, i) { return star(rating && i <= rating, undefined, e) }).join('');
         }
         function isEmpty(e) {
             var i;

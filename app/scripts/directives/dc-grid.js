@@ -28,7 +28,7 @@ angular.module('dockerUiApp').directive('dcGrid', [
                         </tr>\
                     </thead>\
                     <tbody>\
-                        <tr data-ng-repeat-start="row in rows | orderBy:sortBy:sortType" \
+                        <tr data-ng-repeat-start="row in rows" \
                             data-ng-class="rowClass(row)" \
                             data-ng-click="subgrid(row)" \
                             style="min-width: 50px;">\
@@ -64,6 +64,9 @@ angular.module('dockerUiApp').directive('dcGrid', [
                         return;
                     }
                     scope.totalItems = rows.length;
+                    if (scope.sortBy && scope.sortType) {
+                        rows = $filter('orderBy')(rows, scope.sortBy, scope.sortType);
+                    }
                     scope.rows = rows.slice((scope.currentPage-1) * scope.maxSize, scope.currentPage * scope.maxSize);
                     progress = false;
                 }
@@ -93,6 +96,7 @@ angular.module('dockerUiApp').directive('dcGrid', [
                             scope.sortBy = null;
                         }
                     }
+                    init(filtered);
                 };
                 scope.sortUp = function (field) {
                     return scope.sortBy === field && scope.sortType === true;

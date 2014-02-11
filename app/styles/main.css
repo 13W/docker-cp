@@ -111,3 +111,9 @@ ul.pager li, ul.nav.nav-tabs li{
 .decipher-tags-input {
     padding: 6px 0;
 }
+
+@media screen and (min-width: 768px) {
+    .modal-dialog {
+        left: inherit !important;
+    }
+}

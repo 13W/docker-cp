@@ -21,10 +21,14 @@ angular.module('dockerUiApp').directive('dcGrid', [
                 </div>\
                 <table class="table table-hover">\
                     <thead>\
-                        <tr><th data-ng-repeat="def in options.colDef">{{ def.name }}</th></tr>\
+                        <tr>\
+                            <th data-ng-repeat="def in options.colDef" data-ng-click="sort(def.field)" style="cursor: pointer;">\
+                                <i data-ng-class=\'{"glyphicon-chevron-up": sortUp(def.field), "glyphicon-chevron-down": sortDown(def.field)}\' class="glyphicon"></i>{{ def.name }}\
+                            </th>\
+                        </tr>\
                     </thead>\
                     <tbody>\
-                        <tr data-ng-repeat-start="row in rows | orderBy:\'Status\':1" \
+                        <tr data-ng-repeat-start="row in rows | orderBy:sortBy:sortType" \
                             data-ng-class="rowClass(row)" \
                             data-ng-click="subgrid(row)" \
                             style="min-width: 50px;">\
@@ -75,6 +79,28 @@ angular.module('dockerUiApp').directive('dcGrid', [
                     }
                     init(filtered);
                 });
+                scope.sortBy = scope.options.sortBy;
+                scope.sortType = !!scope.options.sortBy;
+                scope.sort = function (field) {
+                    if (scope.sortBy !== field) {
+                        scope.sortBy = field;
+                        scope.sortType = true;
+                    } else {
+                        if (scope.sortType) {
+                            scope.sortType = false;
+                        } else {
+                            scope.sortType = null;
+                            scope.sortBy = null;
+                        }
+                    }
+                };
+                scope.sortUp = function (field) {
+                    return scope.sortBy === field && scope.sortType === true;
+                };
+                scope.sortDown = function (field) {
+                    return scope.sortBy === field && scope.sortType === false;
+                };
+                
                 if (scope.options.globalFilter) {
                     $rootScope.$watch('search.value', function (value) {
                         if (progress) {
@@ -129,7 +155,7 @@ angular.module('dockerUiApp').directive('dcGrid', [
                     }
                     
                     if (typeof def.map === 'function') {
-                        value = def.map(value);
+                        value = def.map(value, data);
                     } else if (typeof def.map === 'string') {
                         el = angular.element('<div>' + def.map + '</div>');
                         value = $compile(el)(data).html();

@@ -3,7 +3,7 @@
 angular.module('dockerUiApp', [
         'ngCookies', 'ngResource', 'ngSanitize', 'ngRoute', 'ui.bootstrap', 'ui.bootstrap.modal', 'route-segment',
         'view-segment', 'chieffancypants.loadingBar', 'ui.bootstrap.pagination', 'ui.bootstrap.progressbar',
-        'ui.bootstrap.alert', 'decipher.tags', 'ui.bootstrap.typeahead', 'ui.bootstrap.datepicker'])
+        'ui.bootstrap.alert', 'decipher.tags', 'ui.bootstrap.typeahead', 'ui.bootstrap.datepicker', 'base64'])
     .config([
         '$routeProvider', '$locationProvider', '$routeSegmentProvider', 'cfpLoadingBarProvider',
         function ($routeProvider, $locationProvider, $routeSegmentProvider, cfpLoadingBarProvider) {
@@ -36,7 +36,7 @@ angular.module('dockerUiApp', [
                         resolve: {
                             data: ['$rootScope', '$cookies', '$location', function ($rootScope, $cookies, $location) {
                                 $rootScope.auth = $cookies.auth = '';
-                                $location.path('/');
+                                $location.path('/info');
                             }]
                         }
                     })

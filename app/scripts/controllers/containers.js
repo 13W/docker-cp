@@ -52,6 +52,7 @@ angular.module('dockerUiApp').controller('ContainersCtrl', [
                     success: !/^Exit/g.test(data.Status)
                 }
             },
+            sortBy: 'Status',
             globalFilter: true
         };
         $scope.options = {size: true, all: true};

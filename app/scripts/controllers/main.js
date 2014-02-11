@@ -16,8 +16,8 @@ angular.module('dockerUiApp').config(['$httpProvider', function ($httpProvider) 
             }
         }]);
     }]).controller('MainCtrl', [
-        '$scope', '$log', '$rootScope', '$http', '$location', '$cookies', 'cfpLoadingBar', 'Docker',
-        function ($scope, $log, $rootScope, $http, $location, $cookies, cfpLoadingBar, Docker) {
+        '$scope', '$log', '$rootScope', '$http', '$location', '$cookies', '$base64', 'cfpLoadingBar', 'Docker',
+        function ($scope, $log, $rootScope, $http, $location, $cookies, $base64, cfpLoadingBar, Docker) {
             $rootScope.search = $scope.search = {value: ''};
             $rootScope.alert = $scope.alert = {value: null};
             $scope.currentLocation = $location.$$path.split('/').slice(0, 2).join('/');
@@ -32,21 +32,25 @@ angular.module('dockerUiApp').config(['$httpProvider', function ($httpProvider) 
             if ($cookies.auth) {
                 try {
                     $scope.auth = $rootScope.auth = JSON.parse($cookies.auth);
+                    $scope.auth.password = JSON.parse($base64.decode($scope.auth.data)).password;
                     Docker.auth($scope.auth, function (response) {
                         if (response.Status !== 'Login Succeeded') {
                             $scope.auth = $rootScope.auth = $cookies.auth = '';
                             $log.error('Auth error', response);
                         }
+                        delete $scope.auth.password;
                     });
                 } catch(e) {
                     $log.error('Failed to parse cookies');
                     $scope.auth = $rootScope.auth = $cookies.auth = '';
                 }
             }
-            
+
             $scope.authenticate = function () {
                 Docker.authenticate(null, function (error, auth) {
                     if (!error) {
+                        auth.data = $base64.encode(JSON.stringify(auth));
+                        delete auth.password;
                         $scope.auth = $rootScope.auth = auth;
                         $cookies.auth = JSON.stringify(auth);
                     }

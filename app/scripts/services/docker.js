@@ -85,9 +85,13 @@ angular.module('dockerUiApp').service('Docker', [
                 if (config.timeout) {
                     options.timeout = config.timeout;
                 }
-                return $http(options)
+                var res = $http(options)
                     .success(callback);
-//                    .error(function ());
+                
+                if (config.error) {
+                    res.error(callback);
+                }
+                return res;
             }
         }
 
@@ -245,6 +249,13 @@ angular.module('dockerUiApp').service('Docker', [
                 params: {
                     service: 'version'
                 }
+            },
+            auth         : {
+                method: 'POST',
+                params: {
+                    service: 'auth'
+                },
+                error : true
             }
         };
 
@@ -414,6 +425,47 @@ angular.module('dockerUiApp').service('Docker', [
             var request = stream.request(opts);
             request.then(callback);
             return request;
+        };
+
+        function authDialog(auth, callback) {
+            var self = this;
+            $modal.open({
+                templateUrl: 'views/auth.html',
+                resolve: {
+                    auth: function () {
+                        return auth || {};
+                    }
+                },
+                controller: function ($scope, $modalInstance, auth) {
+                    $scope.auth = auth;
+                    $scope.login = function () {
+                        self.auth($scope.auth, function (response) {
+                            if (response.Status === 'Login Succeeded') {
+                                callback(null, $scope.auth);
+                            } else {
+                                callback(new Error(response));
+                            }
+                        });
+                        $modalInstance.close();
+                    }
+                    $scope.close = function () {
+                        $modalInstance.close();
+                        callback(false);
+                    }
+                }
+            })
+        }
+
+        Docker.prototype.authenticate = function (auth, callback) {
+            var self = this;
+            if (auth) {
+                self.auth(auth, function (response) {
+                    console.warn(arguments);
+                    authDialog.call(self, auth, callback);
+                });
+            } else {
+                authDialog.call(self, auth, callback);
+            }
         };
         
         return new Docker;

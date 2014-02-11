@@ -24,6 +24,7 @@ angular.module('dockerUiApp', [
                 .when('/images', 'root.images')
                 .when('/images/search', 'root.images-search')
                 .when('/image/:imageId', 'root.image')
+                .when('/logout', 'root.logout')
 
                 .segment('root', {
                     templateUrl: 'views/main.html',
@@ -31,6 +32,14 @@ angular.module('dockerUiApp', [
                     title      : 'Docker.io: Control Panel'
                 })
                 .within()
+                    .segment('logout', {
+                        resolve: {
+                            data: ['$rootScope', '$cookies', '$location', function ($rootScope, $cookies, $location) {
+                                $rootScope.auth = $cookies.auth = '';
+                                $location.path('/');
+                            }]
+                        }
+                    })
                     .segment('set', {
                         resolve: {
                             data: ['$q', '$location', '$route', 'Config', 'Docker', function ($q, $location, $route, Config, Docker) {

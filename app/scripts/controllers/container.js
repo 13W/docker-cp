@@ -145,8 +145,14 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
                     $location.path('/container/' + response.Id.slice(0, 12));
                 }
             });
-       };
-
+        };
+        
+        $scope.export = function () {
+            Docker.export({ID: $scope.containerId}, function () {
+                console.warn(arguments);
+            });
+        };
+        
         $scope.$on('$destroy', function () {
             $scope.active = false;
             $scope.activeTab = {};

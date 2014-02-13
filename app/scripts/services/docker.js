@@ -203,17 +203,6 @@ angular.module('dockerUiApp').service('Docker', [
                     p2     : 'export'
                 }
             },
-            _import      : {
-                method: 'POST',
-                params: {
-                    service : 'images',
-                    p1      : 'create',
-                    fromSrc : '=',
-                    repo    : '=',
-                    tag     : '=',
-                    registry: '='
-                }
-            },
             images       : {
                 method: 'GET',
                 params: {
@@ -491,44 +480,6 @@ angular.module('dockerUiApp').service('Docker', [
             } else {
                 authDialog.call(self, auth, callback);
             }
-        };
-        
-        Docker.prototype.import = function (input, callback) {
-            var self = this;
-            $modal.open({
-                templateUrl: 'views/upload-image.html',
-                resolve: {
-                    input: function () {
-                        return input || {};
-                    }
-                },
-                controller: function ($scope, $modalInstance, input) {
-                    $scope.input = input;
-                    
-                    $scope.url = function () {
-                        var params = createParams(Methods._import.params, $scope.input);
-                        var url = createUrl('/:service/:p1/:p2', params);
-                        var qs = [], k;
-                        for (k in params) {
-                            if (params.hasOwnProperty(k)) {
-                                qs.push(k + '=' + params[k]);
-                            }
-                        }
-                        return $sce.trustAsResourceUrl(Config.host + url + '?' + qs.join('&'));
-                    };
-                    
-                    $scope.ok = function () {
-                        self._import($scope.input, function (result) {
-                            callback(result);
-                            $modalInstance.close();
-                        });
-                    };
-                    $scope.close = function () {
-                        $modalInstance.close();
-                        callback(false);
-                    };
-                }
-            })
         };
         
         return new Docker;

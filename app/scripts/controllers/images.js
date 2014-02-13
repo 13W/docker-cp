@@ -102,12 +102,6 @@ angular.module('dockerUiApp').controller('ImagesCtrl', [
             });
         };
         
-        $scope.uploadImage = function () {
-            Docker.import({}, function () {
-                console.warn(arguments);
-            })
-        };
-        
         $scope.searchImages = function () {
             $location.path('/images/search');
         };

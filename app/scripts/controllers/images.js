@@ -13,6 +13,7 @@ angular.module('dockerUiApp').controller('ImagesCtrl', [
                 ids[image.Id] = image;
                 pids[image.Id] = pids[image.Id] || [];
                 image.children = pids[image.Id];
+                /** @namespace image.ParentId */
                 if (!image.ParentId) {
                     parents.push(image);
                 } else {

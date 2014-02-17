@@ -15,9 +15,12 @@ angular.module('dockerUiApp').service('Docker', [
             return this;
         }
 
+        //noinspection JSAccessibilityCheck
         Docker.prototype.servers = {};
 
+        //noinspection JSAccessibilityCheck
         Docker.prototype.client = function () {
+            //noinspection JSPotentiallyInvalidUsageOfThis
             return this.servers[Config.host];
         };
         
@@ -59,6 +62,7 @@ angular.module('dockerUiApp').service('Docker', [
         }
         
         function createMethod(name, config) {
+            //noinspection JSAccessibilityCheck
             Docker.prototype[name] = function (data, callback) {
                 if (!callback) {
                     callback = data;
@@ -75,7 +79,7 @@ angular.module('dockerUiApp').service('Docker', [
                 if (config.target) {
                     if (config.target === 'self') {
                         location.href = options.url;
-                        return;
+                        return undefined;
                     }
                 }
                 if (config.method === 'POST') {
@@ -282,6 +286,7 @@ angular.module('dockerUiApp').service('Docker', [
             createMethod(method, config);
         }
         
+        //noinspection JSAccessibilityCheck
         Docker.prototype.createContainer = function (predefined, callback) {
             var self = this,
                 defaults = {
@@ -307,7 +312,7 @@ angular.module('dockerUiApp').service('Docker', [
                         return input;
                     }
                 },
-                controller: function ($scope, $modalInstance, input) {
+                controller: ['$scope', '$modalInstance', 'input', function ($scope, $modalInstance, input) {
                     $scope.input = input;
                     $scope.images = [];
                     $scope.containers = [];
@@ -320,6 +325,7 @@ angular.module('dockerUiApp').service('Docker', [
                         if (!$scope.images.length) {
                             return self.images(function (images) {
                                 $scope.images = images.map(function (image) {
+                                    /** @namespace image.RepoTags */
                                     return image.RepoTags[0];
                                 });
                                 return filter($scope.images, term);
@@ -335,6 +341,7 @@ angular.module('dockerUiApp').service('Docker', [
                         if (!$scope.containers.length) {
                             return self.containers({all: true}, function (containers) {
                                 $scope.containers = containers.map(function (container) {
+                                    /** @namespace container.Names */
                                     return container.Names[0].substr(1);
                                 });
                                 return filter($scope.containers, term);
@@ -355,11 +362,12 @@ angular.module('dockerUiApp').service('Docker', [
                     $scope.close = function () {
                         $modalInstance.close();
                         callback(false);
-                    }
-                }
-            })
+                    };
+                }]
+            });
         };
         
+        //noinspection JSAccessibilityCheck
         Docker.prototype.destroy = function (instance, callback) {
             var self = this;
             $modal.open({
@@ -369,7 +377,7 @@ angular.module('dockerUiApp').service('Docker', [
                         return instance;
                     }
                 },
-                controller: function ($scope, $modalInstance, instance) {
+                controller: ['$scope', '$modelInstance', 'instance', function ($scope, $modalInstance, instance) {
                     $scope.instance = instance;
 
                     $scope.ok = function () {
@@ -382,10 +390,11 @@ angular.module('dockerUiApp').service('Docker', [
                         $modalInstance.close();
                         callback(false);
                     };
-                }
+                }]
             });
         };
 
+        //noinspection JSAccessibilityCheck
         Docker.prototype.commit = function (instance, callback) {
             var self = this;
             $modal.open({
@@ -395,7 +404,7 @@ angular.module('dockerUiApp').service('Docker', [
                         return instance;
                     }
                 },
-                controller: function ($scope, $modalInstance, instance) {
+                controller: ['$scope', '$modalInstance', 'instance', function ($scope, $modalInstance, instance) {
                     $scope.instance = instance;
                     $scope.input = {
                         repo: instance.Name.substr(1),
@@ -412,10 +421,11 @@ angular.module('dockerUiApp').service('Docker', [
                         $modalInstance.close();
                         callback(false);
                     };
-                }
+                }]
             });
         };
 
+        //noinspection JSAccessibilityCheck
         Docker.prototype.createImage = function (options, callback) {
             var opts = {
                 url: Config.host + '/images/create?' + (options.query || ''),
@@ -429,6 +439,7 @@ angular.module('dockerUiApp').service('Docker', [
             return request;
         };
 
+        //noinspection JSAccessibilityCheck
         Docker.prototype.events = function (since, progressHandler, callback) {
             var opts = {
                 url: Config.host + '/events?' + since || 'since=1',
@@ -450,7 +461,7 @@ angular.module('dockerUiApp').service('Docker', [
                         return auth || {};
                     }
                 },
-                controller: function ($scope, $modalInstance, auth) {
+                controller: ['$scope', '$modalInstance', 'auth', function ($scope, $modalInstance, auth) {
                     $scope.auth = auth;
                     $scope.login = function () {
                         self.auth($scope.auth, function (response) {
@@ -461,15 +472,16 @@ angular.module('dockerUiApp').service('Docker', [
                             }
                         });
                         $modalInstance.close();
-                    }
+                    };
                     $scope.close = function () {
                         $modalInstance.close();
                         callback(false);
-                    }
-                }
-            })
+                    };
+                }]
+            });
         }
 
+        //noinspection JSAccessibilityCheck
         Docker.prototype.authenticate = function (auth, callback) {
             var self = this;
             if (auth) {

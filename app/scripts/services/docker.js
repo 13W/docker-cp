@@ -370,14 +370,14 @@ angular.module('dockerUiApp').service('Docker', [
         //noinspection JSAccessibilityCheck
         Docker.prototype.destroy = function (instance, callback) {
             var self = this;
-            $modal.open({
+            var $modalInstance = $modal.open({
                 templateUrl  : 'views/destroy-container.html',
                 resolve   : {
                     instance: function () {
                         return instance;
                     }
                 },
-                controller: ['$scope', '$modelInstance', 'instance', function ($scope, $modalInstance, instance) {
+                controller: ['$scope', function ($scope) {
                     $scope.instance = instance;
 
                     $scope.ok = function () {
@@ -397,14 +397,14 @@ angular.module('dockerUiApp').service('Docker', [
         //noinspection JSAccessibilityCheck
         Docker.prototype.commit = function (instance, callback) {
             var self = this;
-            $modal.open({
+            var $modalInstance = $modal.open({
                 templateUrl  : 'views/commit-container.html',
                 resolve   : {
                     instance: function () {
                         return instance;
                     }
                 },
-                controller: ['$scope', '$modalInstance', 'instance', function ($scope, $modalInstance, instance) {
+                controller: ['$scope', function ($scope) {
                     $scope.instance = instance;
                     $scope.input = {
                         repo: instance.Name.substr(1),
@@ -454,14 +454,14 @@ angular.module('dockerUiApp').service('Docker', [
 
         function authDialog(auth, callback) {
             var self = this;
-            $modal.open({
+            var $modalInstance = $modal.open({
                 templateUrl: 'views/auth.html',
                 resolve: {
                     auth: function () {
                         return auth || {};
                     }
                 },
-                controller: ['$scope', '$modalInstance', 'auth', function ($scope, $modalInstance, auth) {
+                controller: ['$scope', function ($scope) {
                     $scope.auth = auth;
                     $scope.login = function () {
                         self.auth($scope.auth, function (response) {

@@ -60,7 +60,12 @@ angular.module('dockerUiApp').factory('stream', [
                     }
                 }
 
-                while (!!~(index = xhr.response.indexOf('}{', nextLine))) {
+                function regexIndexOf(str, regex, startpos) {
+                    var indexOf = str.substring(startpos || 0).search(regex);
+                    return (indexOf >= 0) ? (indexOf + (startpos || 0)) : indexOf;
+                }
+                
+                while (!!~(index = regexIndexOf(xhr.response, /}\s*{/, nextLine))) {
                     part = xhr.response.slice(nextLine, index + 1);
 
                     json = parse(part);

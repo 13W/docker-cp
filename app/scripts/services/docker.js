@@ -462,7 +462,7 @@ angular.module('dockerUiApp').service('Docker', [
                     }
                 },
                 controller: ['$scope', function ($scope) {
-                    $scope.auth = auth;
+                    $scope.auth = auth || {};
                     $scope.login = function () {
                         self.auth($scope.auth, function (response) {
                             if (response.Status === 'Login Succeeded') {

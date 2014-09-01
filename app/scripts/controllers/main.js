@@ -4,13 +4,17 @@ angular.module('dockerUiApp').config(['$httpProvider', function ($httpProvider) 
         $httpProvider.interceptors.push(['$rootScope', function ($rootScope) {
             return {
                 requestError : function (rejection) {
+                    if (!rejection.data) {
+                        return rejection;
+                    }
                     $rootScope.alert.value = {type: 'warning', msg: rejection.data};
-                    console.warn('requestError', arguments);
                     return rejection;
                 },
                 responseError: function (rejection) {
+                    if (!rejection.data) {
+                        return rejection;
+                    }
                     $rootScope.alert.value = {type: 'warning', msg: rejection.data};
-                    console.warn('responseError', arguments);
                     return rejection;
                 }
             }

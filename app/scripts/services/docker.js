@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('dockerUiApp').service('Docker', [
-    '$q', '$filter', '$http', '$sce', 'stream', '$modal', 'Config', function Docker($q, $filter, $http, $sce, stream, $modal, Config) {
+    '$rootScope', '$q', '$filter', 'http', '$sce', 'stream', '$modal', 'Config', function Docker($rootScope, $q, $filter, http, $sce, stream, $modal, Config) {
         function Docker() {
             if (!(this instanceof Docker)) {
                 return new Docker();
@@ -24,87 +24,16 @@ angular.module('dockerUiApp').service('Docker', [
             return this.servers[Config.host];
         };
         
-        function createUrl(map, params) {
-            return map.replace(/(\/:[^/]+)/g, function (a, s) {
-                var key = s.substr(2);
-                if (params.hasOwnProperty(key)) {
-                    var value = params[key];
-                    delete params[key];
-                    return '/' + value;
-                }
-                return '';
-            });
-        }
-        
-        function createParams(map, data) {
-            var params = {},
-                keys = Object.getOwnPropertyNames(map),
-                length = keys.length,
-                k;
-            
-            for (k = 0; k < length; k += 1) {
-                var key = keys[k],
-                    dataKey = map[key],
-                    value = dataKey;
-                
-                if (dataKey[0] === '@') {
-                    value = data[dataKey.substr(1)]
-                } else if (dataKey[0] === '=') {
-                    dataKey = key;
-                    value = data[dataKey];
-                }
-                
-                if (value !== undefined) {
-                    params[key] = value;
-                }
-            }
-            return params;
-        }
-        
-        function createMethod(name, config) {
-            //noinspection JSAccessibilityCheck
-            Docker.prototype[name] = function (data, callback) {
-                if (!callback) {
-                    callback = data;
-                    data = {};
-                }
-                
-                var params = createParams(angular.extend({}, config.params), data),
-                    url = createUrl(config.url || '/:service/:p1/:p2', params),
-                    options = {
-                        method: config.method,
-                        url: Config.host + url,
-                        params: params
-                    };
-                if (config.target) {
-                    if (config.target === 'self') {
-                        location.href = options.url;
-                        return undefined;
-                    }
-                }
-                if (config.method === 'POST') {
-                    options.data = data;
-                }
-                if (config.withCredentials) {
-                    options.withCredentials = true;
-                }
-                if (config.responseType) {
-                    options.responseType = config.responseType;
-                }
-                if (config.timeout) {
-                    options.timeout = config.timeout;
-                }
-                var res = $http(options)
-                    .success(callback);
-                
-                if (config.error) {
-                    res.error(callback);
-                }
-                return res;
-            }
-        }
+        http.config({
+            url: Config.host + '/v1.10/:service/:p1/:p2',
+            errorHandler: function (error) {
+                debugger;
+                $rootScope.alert.value = {type: 'error', msg: error};
 
-        var Methods = {
+            }
+        });
+
+        http.createService({
             containers   : {
                 method: 'GET',
                 params: {
@@ -275,16 +204,7 @@ angular.module('dockerUiApp').service('Docker', [
                 },
                 error : true
             }
-        };
-
-        var methods = Object.getOwnPropertyNames(Methods),
-            length = methods.length,
-            k;
-        for (k = 0; k < length; k += 1) {
-            var method = methods[k],
-                config = Methods[method];
-            createMethod(method, config);
-        }
+        }, Docker.prototype);
         
         //noinspection JSAccessibilityCheck
         Docker.prototype.createContainer = function (predefined, callback) {
@@ -312,7 +232,7 @@ angular.module('dockerUiApp').service('Docker', [
                         return input;
                     }
                 },
-                controller: ['$scope', '$modalInstance', 'input', function ($scope, $modalInstance, input) {
+                controller: ['$scope', '$modalInstance', '$timeout', 'input', function ($scope, $modalInstance, $timeout, input) {
                     $scope.input = input;
                     $scope.images = [];
                     $scope.containers = [];
@@ -354,9 +274,26 @@ angular.module('dockerUiApp').service('Docker', [
                     };
                     
                     $scope.ok = function () {
+                        if (!$scope.input.VolumesFrom.length) {
+                            delete $scope.input.VolumesFrom;
+                        }
+                        if (!$scope.input.Volumes.length) {
+                            delete $scope.input.Volumes;
+                        } else {
+                            var Volumes = {}, Binds = [];
+                            $scope.input.Volumes.forEach(function (volume) {
+                                var parsed = volume.split(':'); // hostPath:containerPath:permission
+                                Volumes[parsed[1]] = {};
+                                Binds.push(volume);
+                            });
+                            $scope.input.Volumes = Volumes;
+                        }
+
                         self.create($scope.input, function (response) {
                             $modalInstance.close();
-                            callback(response);
+                            self.start({ID: response.Id, Binds: Binds, Cmd: ['/bin/sh']}, function () {
+                                callback(response);
+                            });
                         });
                     };
                     $scope.close = function () {

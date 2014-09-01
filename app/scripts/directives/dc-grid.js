@@ -73,7 +73,7 @@ angular.module('dockerUiApp').directive('dcGrid', [
                 scope.$watchCollection('items', function (rows) {
                     progress = true;
                     scope.currentPage = 1;
-                    filtered = rows;
+                    filtered = rows || [];
                     init(filtered);
                 });
                 scope.$watch('currentPage', function () {

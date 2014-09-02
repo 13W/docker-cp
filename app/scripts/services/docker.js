@@ -68,6 +68,21 @@ angular.module('dockerUiApp').service('Docker', [
                     name   : '='
                 }
             },
+/*
+            logs         : {
+                method: 'GET',
+                stream: true,
+                params: {
+                    service: 'containers',
+                    p1     : '@ID',
+                    p2     : 'logs',
+                    stderr : 1,
+                    stdout : 1,
+                    tail   : 100,
+                    timestamps: 1
+                }
+            },
+*/
             changes      : {
                 method: 'GET',
                 params: {
@@ -389,6 +404,25 @@ angular.module('dockerUiApp').service('Docker', [
             return request;
         };
 
+        Docker.prototype.logs = function (options, progressHandler, callback) {
+            var query = [];
+            ['stderr', 'stdout', 'tail'].forEach(function (param) {
+                if (options[param]) {
+                    query.push(param + '=' + options[param]);
+                }
+            });
+            query.push('timestamps=0&follow=1');
+            var opts = {
+                url: Config.host + '/containers/' + options.ID + '/logs?' + query.join('&'),
+                method: 'GET',
+                parseStream: false,
+                progressHandler: progressHandler
+            };
+            var request = stream.request(opts);
+            request.then(callback);
+            return request;
+        };
+        
         function authDialog(auth, callback) {
             var self = this;
             var $modalInstance = $modal.open({

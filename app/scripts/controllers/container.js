@@ -6,6 +6,19 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
         $scope.container = container;
         $scope.containerId = $route.current.params.containerId;
         $scope.changes = [];
+        $scope.Console = {logs: {terminal: null, connection: null}};
+        $scope.changesOpts = {
+            colDef: [
+                {name: 'Filename', field: 'Path'}
+            ],
+            rowClass: function (row) {
+                return {
+                    'warning': !!row.Kind
+                }
+            },
+            maxSize: 5
+        };
+
 
         $scope.getContainer = function () {
             Docker.inspect({ID: $scope.containerId}, function (container) {
@@ -23,7 +36,31 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
                 $timeout($scope.processList.bind($scope, tab), 2000);
             }
         };
-        
+
+        $scope.logs = function () {
+            var logTerminalElement = angular.element('#logTerminal')[0];
+            if (!(logTerminalElement && $scope.containerId || $scope.Console.logs.terminal) || $scope.Console.logs.terminal) {
+                return;
+            }
+            var terminal = $scope.Console.logs.terminal = new Terminal({
+                cols: 0,
+                rows: 0,
+                useStyle: true,
+                screenKeys: true
+            });
+            terminal.open(logTerminalElement);
+            var connection = $scope.Console.logs.connection = Docker.logs({ID: $scope.containerId, stdout:1, stderr: 1}, function (data) {
+                console.warn(arguments);
+                if (logTerminalElement) {
+                    terminal.write(data);
+                } else {
+                    connection.abort();
+                    terminal.destroy();
+                    $scope.Console.logs.terminal = false;
+                }
+            });
+        };
+
         $scope.start = function () {
             if ($scope.containerId) {
                 Docker.start({ID: $scope.containerId}, function () {
@@ -86,7 +123,7 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
                 }
             }
         }
-        $scope.Console = {};
+
         $scope.attachConsole = function () {
             if ($scope.containerId) {
                 if (!$scope.Console.socket) {
@@ -121,18 +158,6 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
             }
         };
         
-        $scope.changesOpts = {
-            colDef: [
-                {name: 'Filename', field: 'Path'}
-            ],
-            rowClass: function (row) {
-                return {
-                    'warning': !!row.Kind
-                }
-            },
-            maxSize: 5
-        };
-        
         $scope.getChanges = function () {
             Docker.changes({ID: $scope.containerId}, function (changes) {
                 $scope.changes = changes;
@@ -156,6 +181,13 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
         $scope.$on('$destroy', function () {
             $scope.active = false;
             $scope.activeTab = {};
+            if ($scope.Console.logs.connection) {
+                $scope.Console.logs.connection.abort();
+            }
+            if ($scope.Console.logs.terminal) {
+                $scope.Console.logs.terminal.destroy();
+                $scope.Console.logs.terminal = false;
+            }
             if ($scope.Console.socket) {
                 $scope.Console.socket.close();
             }

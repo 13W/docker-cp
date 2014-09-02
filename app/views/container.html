@@ -71,7 +71,7 @@
                                 <tr><th>From</th><th>To</th><th>RO/RW</th></tr>
                             </thead>
                             <tbody>
-                                <tr data-ng-repeat="(from, to) in container.Volumes"><td>{{ from }}</td><td>{{ to }}</td><td>{{ container.VolumesRW[from] ? 'RW' : 'RO' }}</td></tr>
+                                <tr data-ng-repeat="(to, from) in container.Volumes"><td>{{ from }}</td><td>{{ to }}</td><td>{{ container.VolumesRW[to] ? 'RW' : 'RO' }}</td></tr>
                             </tbody>
                         </table>
                     </td>
@@ -106,8 +106,11 @@
     <tab heading="Terminal" active="activeTab[2]" select="activeTab[2] = true;attachConsole()">
         <div id="terminal" style="line-height: 1"></div>
     </tab>
-    <tab heading="Changes" active="activeTab[3]" select="activeTab[3] = true;getChanges()">
+    <tab heading="Log" active="activeTab[3]" select="activeTab[3] = true;logs()">
+        <pre><code id="logTerminal" style="line-height: 1;height: 200px;"></code></pre>
+    </tab>
+    <tab heading="Changes" active="activeTab[4]" select="activeTab[4] = true;getChanges()">
         <dc-grid data-options="changesOpts" data-items="changes" style="padding: 0;"></dc-grid>
     </tab>
-    <tab heading="Json Config" active="activeTab[4]" select="activeTab[4] = true"><pre>{{ container | json }}</pre></tab>
+    <tab heading="Json Config" active="activeTab[5]" select="activeTab[5] = true"><pre>{{ container | json }}</pre></tab>
 </tabset>

@@ -25,7 +25,9 @@ angular.module('dockerUiApp').service('Docker', [
         };
         
         http.config({
-            url: Config.host + '/v1.10/:service/:p1/:p2',
+            url: function getUrl() {
+                return Config.host + '/v1.10/:service/:p1/:p2';
+            },
             errorHandler: function (error) {
                 debugger;
                 $rootScope.alert.value = {type: 'error', msg: error};

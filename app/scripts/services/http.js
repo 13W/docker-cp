@@ -58,7 +58,8 @@ angular.module('dockerUiApp').service('http', [
                     data = params = {};
                 }
                 params = createParams(angular.extend({}, config.params), params);
-                var url = createUrl(Config.url, params),
+
+                var url = createUrl(Config.url(), params),
                     options = {
                         method: config.method,
                         url: url,

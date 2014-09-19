@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('dockerUiApp').controller('ContainerCtrl', [
-    '$scope', '$route', '$timeout', '$location', 'Docker', 'container', function ($scope, $route, $timeout, $location, Docker, container) {
+angular.module('dockerUiApp').controller('ContainerCtrl', ['$scope', '$route', '$timeout', '$location', 'Config', 'Docker', 'container',
+    function ($scope, $route, $timeout, $location, Config, Docker, container) {
         $scope.active = true;
         $scope.container = container;
         $scope.containerId = $route.current.params.containerId;
@@ -127,7 +127,12 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
         $scope.attachConsole = function () {
             if ($scope.containerId) {
                 if (!$scope.Console.socket) {
-                    $scope.Console.socket = new WebSocket('ws://localhost:4243/containers/' + $scope.containerId + '/attach/ws?logs=0&stream=1&stdout=1&stderr=1&stdin=1');
+                    var parser = document.createElement('a');
+                    parser.href = Config.host;
+                    
+                    debugger;
+                    $scope.Console.socket = new WebSocket((parser.protocol === 'https:' ? 'wss' : 'ws') + '://' + parser.host + '/containers/' + 
+                        $scope.containerId + '/attach/ws?logs=0&stream=1&stdout=1&stderr=1&stdin=1');
 
                     $scope.Console.terminal = new Terminal({
                         cols: 0,

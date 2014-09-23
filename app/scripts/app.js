@@ -2,8 +2,9 @@
 
 angular.module('dockerUiApp', [
         'ngCookies', 'ngResource', 'ngSanitize', 'ngRoute', 'ui.bootstrap', 'ui.bootstrap.modal', 'route-segment',
-        'view-segment', 'chieffancypants.loadingBar', 'ui.bootstrap.pagination', 'ui.bootstrap.progressbar',
-        'ui.bootstrap.alert', 'decipher.tags', 'ui.bootstrap.typeahead', 'ui.bootstrap.datepicker', 'base64'])
+        'view-segment', 'chieffancypants.loadingBar', 'ui.bootstrap.pagination', 'ui.bootstrap.progressbar','base64',
+        'ui.bootstrap.alert', 'ui.bootstrap.typeahead', 'ui.bootstrap.datepicker', 'ui.select', 'ngTagsInput',
+        'gd.ui.jsonexplorer'])
     .config([
         '$routeProvider', '$locationProvider', '$routeSegmentProvider', 'cfpLoadingBarProvider',
         function ($routeProvider, $locationProvider, $routeSegmentProvider, cfpLoadingBarProvider) {
@@ -83,17 +84,20 @@ angular.module('dockerUiApp', [
                         templateUrl: 'views/container.html',
                         controller : 'ContainerCtrl',
                         title      : 'Docker.io: Container',
+                        dependencies: ['containerId'],
                         resolve    : {
                             container: ['$q', '$route', 'Docker', function ($q, $route, Docker) {
                                 var containerId = $route.current.params.containerId, defer = $q.defer();
-                                Docker.inspect({ID: containerId}, function (container) {
-                                    defer.resolve(container);
+                                Docker.inspect({ID: containerId, errorHandler: false}, function (error, container) {
+                                    error ? defer.reject(error) : defer.resolve(container);
                                 });
     
                                 return defer.promise;
                             }]
                         },
-                        dependencies: ['containerId']
+                        resolveFailed: {
+                            templateUrl: '404.html'
+                        }
                     })
                     .segment('containers', {
                         templateUrl: 'views/containers.html',
@@ -104,7 +108,30 @@ angular.module('dockerUiApp', [
                         templateUrl   : 'views/image.html',
                         controller    : 'ImageCtrl',
                         reloadOnSearch: false,
-                        title         : 'Docker.io: Image'
+                        title         : 'Docker.io: Image',
+                        dependencies  : ['imageId'],
+                        resolve       : {
+                            image     : ['$q', '$route', 'Docker', function ($q, $route, Docker) {
+                                var imageId = $route.current.params.imageId, defer = $q.defer();
+                                Docker.inspectImage({ID: imageId, errorHandler: false}, function (error, image) {
+                                    if (error) {
+                                        return defer.reject(error);
+                                    }
+                                    Docker.images({all: true, tree: false}, function (images) {
+                                        image.info = images.find(function (image) {
+                                            return image.Id.substr(0, 12) === imageId;
+                                        }) || {};
+
+                                        Docker.historyImage({ID: imageId}, function (history) {
+                                            image.history = history || [];
+                                            defer.resolve(image);
+                                        });
+                                    });
+                                });
+
+                                return defer.promise;
+                            }]
+                        }
                     })
                     .segment('images', {
                         templateUrl: 'views/images.html',

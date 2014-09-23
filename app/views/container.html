@@ -89,21 +89,21 @@
             </tbody>
         </table>
     </tab>
-    <tab heading="Process list" active="activeTab[1]" select="activeTab[1] = true;processList(0)">
+    <tab heading="Process list" active="activeTab[1]" select="activeTab[1] = true;processList(1)" disabled="!container.State.Running">
         <table class="table prev" style="width: auto;">
             <thead>
             <tr>
-                <th data-ng-repeat="Title in container.ps.Titles" style="min-width: 70px;">{{ Title }}</th>
+                <th data-ng-repeat="Title in processList.Titles" style="min-width: 70px;">{{ Title }}</th>
             </tr>
             </thead>
             <tbody>
-            <tr data-ng-repeat="process in container.ps.Processes">
+            <tr data-ng-repeat="process in processList.Processes">
                 <td data-ng-repeat="col in process track by $index">{{ col }}</td>
             </tr>
             </tbody>
         </table>
     </tab>
-    <tab heading="Terminal" active="activeTab[2]" select="activeTab[2] = true;attachConsole()">
+    <tab heading="Terminal" active="activeTab[2]" select="activeTab[2] = true;attachConsole()" disabled="!container.State.Running">
         <div id="terminal" style="line-height: 1"></div>
     </tab>
     <tab heading="Log" active="activeTab[3]" select="activeTab[3] = true;logs()">
@@ -112,5 +112,7 @@
     <tab heading="Changes" active="activeTab[4]" select="activeTab[4] = true;getChanges()">
         <dc-grid data-options="changesOpts" data-items="changes" style="padding: 0;"></dc-grid>
     </tab>
-    <tab heading="Json Config" active="activeTab[5]" select="activeTab[5] = true"><pre>{{ container | json }}</pre></tab>
+    <tab heading="Json Config" active="activeTab[5]" select="activeTab[5] = true">
+        <json-explorer json-data="{{container}}" collapsed="true"></json-explorer>
+    </tab>
 </tabset>

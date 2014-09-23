@@ -49,7 +49,7 @@ angular.module('dockerUiApp').controller('ContainersCtrl', [
             ],
             rowClass: function (data) {
                 return {
-                    success: !/^Exit/g.test(data.Status)
+                    success: data.Status && !/^Exit/g.test(data.Status)
                 }
             },
             sortBy: 'Status',

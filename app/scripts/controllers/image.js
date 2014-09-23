@@ -1,34 +1,84 @@
 'use strict';
 
-angular.module('dockerUiApp').controller('ImageCtrl', [
-    '$scope', '$rootScope', '$route', '$location', 'Docker', function ($scope, $rootScope, $route, $location, Docker) {
-        $scope.imageId = $route.current.params.imageId;
+angular.module('dockerUiApp').controller('ImageCtrl', ['$scope', '$routeSegment', '$location', '$modal', 'Docker', 'image',
+    function ($scope, $routeSegment, $location, $modal, Docker, image) {
+        $scope.image = image;
         $scope.destroyImage = function () {
-            if ($scope.imageId) {
-                Docker.deleteImage({ID: $scope.imageId.slice(0, 12)}, function (response) {
-                    console.warn(response);
-                    $location.path('/images');
-                });
-            }
+            Docker.deleteImage({ID: image.Id.slice(0, 12)}, function (response) {
+                console.warn(response);
+                $location.path('/images');
+            });
         };
 
-        $scope.history = [];
-        $scope.getImage = function (imageId) {
-            Docker.inspectImage({ID: imageId}, function (image) {
-                $scope.image = image;
+        function push(name, tag) {
+            tag = tag || 'latest';
+            $scope.progress = {};
+            $modal.open({
+                templateUrl: 'views/download-image.html',
+                keyboard: false,
+                backdrop: 'static',
+                resolve: {
+                    image: function () {
+                        return image;
+                    },
+                    progress: function () {
+                        return $scope.progress;
+                    }
+                },
+                controller: ['$scope', '$modalInstance', 'image', 'progress', function ($modalScope, $modalInstance, image, progress) {
+                    $modalScope.image = image;
+                    $modalScope.progress = progress;
+                    $modalScope.tag = tag;
+                    $modalScope.background = function background() {
+                        $modalInstance.close();
+                    };
+                }]
             });
-            Docker.historyImage({ID: imageId}, function (history) {
-                $scope.history = history;
+
+            Docker.pushImage({
+                name: name,
+                query: tag && 'tag=' + tag,
+                progressHandler: function (data) {
+                    if (Array.isArray(data)) {
+                        data.forEach(function (data) {
+                            if (!data.id) {
+                                image.statusMessage = data.status;
+                                return;
+                            }
+                            var ptr = $scope.progress[data.id] = $scope.progress[data.id] || {active: true, total: 0, k: 0};
+
+                            if (!isEmpty(data.progressDetail)) {
+                                ptr.start = ptr.start || new Date(data.progressDetail.start * 1000);
+                                ptr.total = data.progressDetail.total;
+                                ptr.current = data.progressDetail.current;
+                                ptr.k = ptr.current * 100 / ptr.total;
+                            }
+                            if (data.status === 'Upload complete') {
+                                ptr.k = 100;
+                                ptr.current = ptr.total;
+                                ptr.active = false;
+                            }
+                            ptr.status = data.status;
+                        });
+                        $scope.$apply();
+                    }
+                }
+            }, function () {
+                console.warn('Upload complete', arguments);
             });
         };
-        
-        $scope.getImage($scope.imageId);
-        // route update?!!!
-        $rootScope.$on('$routeChangeSuccess', function (event, next) {
-            if (next.params.imageId) {
-                $scope.getImage(next.params.imageId.slice(0, 12));
+
+        $scope.push = function () {
+            var name = image.info.RepoTags[0];
+            if (!name) {
+                alert('Please, tag image first');
+                return;
             }
-        });
+            var parsed = name.split(':'),
+                tag = parsed[1];
+            name = parsed[0];
+            push(name, tag);
+        };
 
         $scope.imageHistoryOpts = {
             colDef: [
@@ -39,4 +89,8 @@ angular.module('dockerUiApp').controller('ImageCtrl', [
             ],
             maxSize: 5
         };
+
+        $scope.$on('$routeChangeSuccess', function () {
+            $routeSegment.chain.slice(-1)[0].reload();
+        });
     }]);

@@ -10,17 +10,22 @@
                                                   data-ng-model="input.name">
                     </div>
                 </div>
-                <div class="form-group"><label for="Image" class="col-sm-2 control-label">Image</label>
+                <div class="form-group"><label class="col-sm-2 control-label">Image</label>
                     <div class="col-sm-10">
-                        <input type="text" class="form-control" id="Image" placeholder="Image"
-                                                  data-ng-model="input.Image"
-                                                  typeahead="img for img in getImage($viewValue) | filter:$viewValue">
+                        <ui-select data-ng-model="input.Image" theme="selectize" reset-search-input="false" style="width: 300px;">
+                            <ui-select-match placeholder="Enter image name...">{{$select.selected}}</ui-select-match>
+                            <ui-select-choices repeat="img in images | filter: $select.search"
+                                    refresh="getImages($select.search)">
+                                <span data-ng-bind-html="img | highlight: $select.search"></span>
+                                <!--<small data-ng-bind-html="tag.layer | highlight: $select.search"></small>-->
+                            </ui-select-choices>
+                        </ui-select>
+                        <ui-select></ui-select>
                     </div>
                 </div>
                 <div class="form-group"><label class="col-sm-2 control-label">Env Variables</label>
                     <div class="col-sm-10">
-                        <tags data-options="{addable: true}"
-                              data-model="input.Env" style="padding-top: 0 !important;"></tags>
+                        <tags-input data-ng-model="input.Env" placeholder="KEY=value"></tags-input>
                     </div>
                 </div>
                 <div class="form-group"><label for="Cmd" class="col-sm-2 control-label">Command</label>
@@ -36,20 +41,17 @@
                 </div>
                 <div class="form-group"><label class="col-sm-2 control-label">PortSpecs</label>
                     <div class="col-sm-10">
-                        <tags data-options="{addable: true}"
-                              data-model="input.PortSpecs" style="padding-top: 0 !important;"></tags>
+                        <tags-input data-ng-model="input.PortSpecs" placeholder="ip:hostPort:containerPort | ip::containerPort | hostPort:containerPort"></tags-input>
                     </div>
                 </div>
                 <div class="form-group"><label class="col-sm-2 control-label">Dns</label>
                     <div class="col-sm-10">
-                        <tags data-options="{addable: true}"
-                                data-model="input.Dns" style="padding-top: 0 !important;"></tags>
+                        <tags-input data-ng-model="input.Dns" placeholder="XX.XX.XX.XX"></tags-input>
                     </div>
                 </div>
                 <div class="form-group"><label class="col-sm-2 control-label">Exposed Ports</label>
                     <div class="col-sm-10">
-                        <tags data-options="{addable: true}"
-                              data-model="input.ExposedPorts" style="padding-top: 0 !important;"></tags>
+                        <tags-input data-ng-model="input.ExposedPorts" ></tags-input>
                     </div>
                 </div>
             </tab>
@@ -80,8 +82,7 @@
             <tab heading="Volumes">
                 <div class="form-group"><label class="col-sm-2 control-label">Volumes</label>
                     <div class="col-sm-10">
-                        <tags data-options="{addable: true}"
-                              data-model="input.Volumes" style="padding-top: 0 !important;"></tags>
+                        <tags-input data-ng-model="input.Volumes" placeholder="/path/from/:/path/to:rw"></tags-input>
                     </div>
                 </div>
                 <div class="form-group"><label for="VolumesFrom" class="col-sm-2 control-label">Volumes From</label>
@@ -94,10 +95,8 @@
             </tab>
         </tabset>
     </form>
-<!--
--->
 </div>
 <div class="modal-footer">
-    <button class="btn btn-success" ng-click="ok()">Create Container</button>
-    <button class="btn btn-warning" ng-click="close()">Cancel</button>
+    <button class="btn btn-success" data-ng-click="ok()">Create Container</button>
+    <button class="btn btn-warning" data-ng-click="close()">Cancel</button>
 </div>

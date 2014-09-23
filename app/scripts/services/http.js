@@ -57,14 +57,17 @@ angular.module('dockerUiApp').service('http', [
                     callback = data;
                     data = params = {};
                 }
-                params = createParams(angular.extend({}, config.params), params);
 
+                var errorHandler = params.hasOwnProperty('errorHandler') ? params.errorHandler : Config.errorHandler;
+                delete params.errorHandler;
+                params = createParams(angular.extend({}, config.params), params);
                 var url = createUrl(Config.url(), params),
                     options = {
                         method: config.method,
                         url: url,
                         params: params
                     };
+
                 if (config.target) {
                     if (config.target === 'self') {
                         location.href = options.url;
@@ -92,11 +95,15 @@ angular.module('dockerUiApp').service('http', [
                 function cb(status) {
                     return function () {
                         var args = [].slice.call(arguments);
-                        if (angular.isFunction(Config.errorHandler)) {
+
+                        if (angular.isFunction(errorHandler)) {
                             if (status === 'error') {
-                                Config.errorHandler.apply(null, args);
+                                errorHandler.apply(null, args);
                                 return;
                             }
+                        } else if (status === 'error') {
+                            callback.apply(this, args);
+                            return;
                         } else if (status !== 'error') {
                             args.unshift(null);
                         }
@@ -106,8 +113,11 @@ angular.module('dockerUiApp').service('http', [
                 }
 
                 return $http(options)
-                    .success(function (response) {
-                        var status = response.error ? 'error' : 'success';
+                    .success(function (response, status) {
+                        status = (!status || status > 400) ? 'error' : 'success';
+                        if (!response) {
+                            response = "Connection refused";
+                        }
                         cb(status)(response);
                     })
                     .error(cb('error'));

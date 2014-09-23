@@ -32,10 +32,34 @@ angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
             return true;
         }
         
-        $scope.downloadImage = function (image) {
+        $scope.selectImageTag = function (image, callback) {
+            Docker.getImageTags(image.name).then(function (tags) {
+                $modal.open({
+                    templateUrl: 'views/image-version-choice.html',
+                    controller: ['$scope', '$modalInstance', function ($modalScope, $modalInstance) {
+                        $modalScope.image = image;
+                        $modalScope.tags = tags.data;
+                        $modalScope.selected = {tag: 'latest'};
+                        $modalScope.ok = function ok() {
+                            $modalInstance.close();
+                            callback(null, $modalScope.selected.tag);
+                        };
+                        $modalScope.cancel = function () {
+                            $modalInstance.close();
+                            callback('canceled');
+                        };
+                    }]
+                });
+            });
+        };
+        
+        $scope.downloadImage = function (image, tag) {
+            tag = tag || 'latest';
             $scope.progress = {};
-            $modal.open({
+            var $modalWindow = $modal.open({
                 templateUrl: 'views/download-image.html',
+                keyboard: false,
+                backdrop: 'static',
                 resolve: {
                     image: function () {
                         return image;
@@ -44,31 +68,19 @@ angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
                         return $scope.progress;
                     }
                 },
-                controller: ['$scope', '$modalInstance', 'image', 'progress', function ($scope, $modalInstance, image, progress) {
-                    $scope.image = image;
-                    $scope.progress = progress;
-
-                    $scope.background = $scope.close = function ok() {
+                controller: ['$scope', '$modalInstance', 'image', 'progress', function ($modalScope, $modalInstance, image, progress) {
+                    $modalScope.image = image;
+                    $modalScope.progress = progress;
+                    $modalScope.tag = tag;
+                    $modalScope.background = function background() {
                         $modalInstance.close();
                     };
                 }]
             });
-            
+
             Docker.createImage({
-                query: 'fromImage=' + image.name,
+                query: 'fromImage=' + image.name + '&tag=' + tag,
                 progressHandler: function (data) {
-/*
-                [{
-                    id: "fbef37ddf7ce"
-                    progress: "[==================================================>] 145.2 MB/145.2 MB"
-                    progressDetail: Object
-                    current: 145206197
-                    start: 1391639102
-                    total: 145206197
-                    __proto__: Object
-                    status: "Downloading"
-                }]
-*/
                     if (Array.isArray(data)) {
                         data.forEach(function (data) {
                             if (!data.id) {
@@ -94,7 +106,9 @@ angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
                     }
                 }
             }, function () {
+                alert('Download complete');
                 console.warn('Download complete', arguments);
+                $modalWindow.close();
             });
         };
         
@@ -116,8 +130,12 @@ angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
                     {
                         name : '<i class="glyphicon glyphicon-download"></i> Download',
                         class: 'btn btn-xs btn-primary',
-                        click: function (data) {
-                            $scope.downloadImage(data);
+                        click: function (image) {
+                            $scope.selectImageTag(image, function (canceled, tag) {
+                                if (!canceled) {
+                                    $scope.downloadImage(image, tag.name);
+                                }
+                            });
                         }
                     }
                 ], compile: true}

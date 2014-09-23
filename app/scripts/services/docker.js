@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('dockerUiApp').service('Docker', [
-    '$rootScope', '$q', '$filter', 'http', '$sce', 'stream', '$modal', 'Config', function Docker($rootScope, $q, $filter, http, $sce, stream, $modal, Config) {
+    '$rootScope', '$q', '$filter', 'http', '$http', '$sce', 'stream', '$modal', 'Config', function Docker($rootScope, $q, $filter, http, $http, $sce, stream, $modal, Config) {
         function Docker() {
             if (!(this instanceof Docker)) {
                 return new Docker();
@@ -26,10 +26,9 @@ angular.module('dockerUiApp').service('Docker', [
         
         http.config({
             url: function getUrl() {
-                return Config.host + '/v1.10/:service/:p1/:p2';
+                return Config.host + '/:service/:p1/:p2';
             },
             errorHandler: function (error) {
-                debugger;
                 $rootScope.alert.value = {type: 'error', msg: error};
 
             }
@@ -55,6 +54,7 @@ angular.module('dockerUiApp').service('Docker', [
             },
             processList  : {
                 method: 'GET',
+                cache : false,
                 params: {
                     service: 'containers',
                     p1     : '@ID',
@@ -202,6 +202,18 @@ angular.module('dockerUiApp').service('Docker', [
                     term   : '='
                 }
             },
+            pushImage    : {
+                method: 'POST',
+                headers: {
+                    'X-Registry-Auth': '='
+                },
+                params: {
+                    service: 'images',
+                    p1     : '@Name',
+                    p2     : 'push',
+                    tag    : '='
+                }
+            },
             info         : {
                 method: 'GET',
                 params: {
@@ -227,7 +239,7 @@ angular.module('dockerUiApp').service('Docker', [
         Docker.prototype.createContainer = function (predefined, callback) {
             var self = this,
                 defaults = {
-                    'Image': 'base',
+                    'Image': '',
                     'PortSpecs': [],
                     'ExposedPorts': [],
                     'Env': [],
@@ -254,11 +266,20 @@ angular.module('dockerUiApp').service('Docker', [
                     $scope.images = [];
                     $scope.containers = [];
                     
+                    function tagsToArray(tags) {
+                        return (tags || []).map(function (tag) {
+                                return tag.text;
+                            })
+                            .filter(function (value) {
+                                return !!value;
+                            });
+                    }
+
                     function filter(array, term) {
                         return $filter('filter')(array, term);
                     }
                     
-                    $scope.getImage = function (term) {
+                    $scope.getImages = function (term) {
                         if (!$scope.images.length) {
                             return self.images(function (images) {
                                 $scope.images = images.map(function (image) {
@@ -291,24 +312,35 @@ angular.module('dockerUiApp').service('Docker', [
                     };
                     
                     $scope.ok = function () {
-                        if (!$scope.input.VolumesFrom.length) {
-                            delete $scope.input.VolumesFrom;
+                        var Volumes = {}, Binds = [], Container = angular.extend({}, $scope.input);
+                        ['Env', 'Dns', 'ExposedPorts', 'PortSpecs', 'Volimes', 'Links'].forEach(function (prop) {
+                            if (Array.isArray(Container[prop])) {
+                                Container[prop] = tagsToArray(Container[prop]);
+                            }
+                        })
+                        if (!Container.VolumesFrom.length) {
+                            delete Container.VolumesFrom;
                         }
-                        if (!$scope.input.Volumes.length) {
-                            delete $scope.input.Volumes;
+                        if (!Container.Volumes.length) {
+                            delete Container.Volumes;
                         } else {
-                            var Volumes = {}, Binds = [];
-                            $scope.input.Volumes.forEach(function (volume) {
+                            Container.Volumes.forEach(function (volume) {
                                 var parsed = volume.split(':'); // hostPath:containerPath:permission
                                 Volumes[parsed[1]] = {};
                                 Binds.push(volume);
                             });
-                            $scope.input.Volumes = Volumes;
+                            Container.Volumes = Volumes;
                         }
 
-                        self.create($scope.input, function (response) {
+                        self.create(Container, function (response) {
                             $modalInstance.close();
-                            self.start({ID: response.Id, Binds: Binds, Cmd: ['/bin/sh']}, function () {
+                            self.start({
+                                ID: response.Id,
+                                Links: Container.Links,
+                                LxcConf: Container.LxcConf,
+                                Dns: Container.Dns,
+                                VolumesFrom: Container.VolumesFrom,
+                                Binds: Binds}, function () {
                                 callback(response);
                             });
                         });
@@ -384,6 +416,26 @@ angular.module('dockerUiApp').service('Docker', [
             var opts = {
                 url: Config.host + '/images/create?' + (options.query || ''),
                 method: options.method || 'POST',
+                headers: {
+                    'X-Registry-Auth': '='
+                },
+                parseStream: true,
+                progressHandler: options.progressHandler
+            };
+
+            var request = stream.request(opts);
+            request.then(callback);
+            return request;
+        };
+
+        //noinspection JSAccessibilityCheck
+        Docker.prototype.pushImage = function (options, callback) {
+            var opts = {
+                url: Config.host + '/images/' + options.name + '/push?' + (options.query || ''),
+                method: options.method || 'POST',
+                headers: {
+//                    'X-Registry-Auth': '='
+                },
                 parseStream: true,
                 progressHandler: options.progressHandler
             };
@@ -467,5 +519,10 @@ angular.module('dockerUiApp').service('Docker', [
             }
         };
         
+        Docker.prototype.getImageTags = function (name) {
+            return $http.get('https://jsonp.nodejitsu.com/?url=' + 
+                encodeURIComponent('https://index.docker.io/v1/repositories/' + name + '/tags'));
+        }
+
         return new Docker;
     }]);

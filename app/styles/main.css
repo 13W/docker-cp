@@ -1,3 +1,11 @@
+@media screen and (min-width: 768px) {
+/*
+    .modal-dialog {
+        left: inherit !important;
+    }
+*/
+}
+
 /* Space out content a bit */
 body {
   padding-top: 0px;
@@ -90,7 +98,7 @@ ul.pager li, ul.nav.nav-tabs li{
     width: 250px;
 }
 
-.decipher-tags {
+.tags {
     min-height: 34px;
     padding: 0 12px;
     margin: 0;
@@ -108,12 +116,6 @@ ul.pager li, ul.nav.nav-tabs li{
     transition: border-color ease-in-out 0.15s, box-shadow ease-in-out 0.15s;
 }
 
-.decipher-tags-input {
-    padding: 6px 0;
-}
-
-@media screen and (min-width: 768px) {
-    .modal-dialog {
-        left: inherit !important;
-    }
+.search-input, .selectize-control {
+    width: 100% !important;
 }

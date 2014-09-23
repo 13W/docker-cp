@@ -31,7 +31,7 @@ module.exports = function (grunt) {
     watch: {
       bower: {
         files: ['bower.json'],
-        tasks: ['wiredep']
+        tasks: []
       },
       js: {
         files: ['<%= yeoman.app %>/scripts/{,*/}*.js'],
@@ -359,10 +359,14 @@ module.exports = function (grunt) {
     if (target === 'dist') {
       return grunt.task.run(['build', 'connect:dist:keepalive']);
     }
+    if (target === 'dist-light') {
+      return grunt.task.run(['build-light', 'connect:dist:keepalive']);
+    }
+      
 
     grunt.task.run([
       'clean:server',
-      'wiredep',
+//      'wiredep',
       'concurrent:server',
       'autoprefixer',
       'connect:livereload',
@@ -392,11 +396,28 @@ module.exports = function (grunt) {
     'concat',
     'ngAnnotate',
     'copy:dist',
-    'cdnify',
+//    'cdnify',
     'cssmin',
     'uglify',
     'filerev',
     'usemin',
+    'htmlmin'
+  ]);
+
+  grunt.registerTask('build-light', [
+    'clean:dist',
+//    'wiredep',
+//    'useminPrepare',
+    'concurrent:dist',
+//    'autoprefixer',
+//    'concat',
+    'ngAnnotate',
+    'copy:dist',
+//    'cdnify',
+//    'cssmin',
+//    'uglify',
+//    'filerev',
+//    'usemin',
     'htmlmin'
   ]);
 

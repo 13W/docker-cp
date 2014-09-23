@@ -20,12 +20,20 @@ var XHR = window.XMLHttpRequest || function() {
 
 
 angular.module('dockerUiApp').factory('stream', [
-    '$q', '$timeout', function ($q, $timeout) {
+    '$q', '$timeout', '$rootScope', function ($q, $timeout, $rootScope) {
         var ABORTED = -1;
 
         function Request(options) {
 
-            var defer = $q.defer(), xhr = this.xhr = new XHR(), headers = options.headers, nextLine = 0, status;
+            var defer = $q.defer(), xhr = this.xhr = new XHR(), headers = options.headers || {}, nextLine = 0, status;
+
+            if (headers['X-Registry-Auth']) {
+                if ($rootScope.auth) {
+                    headers['X-Registry-Auth'] = $rootScope.auth.data;
+                } else {
+                    delete headers['X-Registry-Auth'];
+                }
+            }
 
             xhr.open(options.method, options.url, true);
 

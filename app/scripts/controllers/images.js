@@ -3,7 +3,7 @@
 angular.module('dockerUiApp').controller('ImagesCtrl', [
     '$scope', '$location', 'Docker', function ($scope, $location, Docker) {
         $scope.images = [];
-        $scope.options = {all: true, tree: true};
+        $scope.options = {all: false, tree: false};
 
         function createTree(images, container) {
             var ids = {},

@@ -3,6 +3,19 @@
 angular.module('dockerUiApp').config(['$httpProvider', function ($httpProvider) {
         $httpProvider.interceptors.push(['$rootScope', function ($rootScope) {
             return {
+                request: function (config) {
+                    config.headers = config.headers || {};
+
+                    if (config.headers['X-Registry-Auth']) {
+                        if ($rootScope.auth) {
+                            config.headers['X-Registry-Auth'] = $rootScope.auth.data;
+                        } else {
+                            delete config.headers['X-Registry-Auth'];
+                        }
+                    }
+
+                    return config;
+                },
                 requestError : function (rejection) {
                     if (!rejection.data) {
                         return rejection;

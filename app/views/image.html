@@ -1,8 +1,7 @@
-<div class="scope-container" style="display: none;"></div>
 <span class="text-muted h3">Image: </span>
 <h3 style="display: inline !important;width: 150px">
     <strong>{{ image.info.RepoTags[0].toUpperCase() }}</strong>
-    <small>{{ image.id| shortTag }} From {{ image.created | date }}</small>
+    <small>{{ image.Id | shortTag }}, Created: {{ image.Created | date }}</small>
 </h3>
 <button class="pull-right btn btn-danger btn-xs" data-ng-click="destroyImage()" style="width: 80px">
     <i class="glyphicon glyphicon-remove-circle"></i> Destroy</button>
@@ -13,17 +12,17 @@
 <hr/>
 <dl class="dl-horizontal">
     <dt>Id</dt>
-    <dd>{{ image.id| shortTag }}</dd>
+    <dd>{{ image.Id| shortTag }}</dd>
     <dt>OS</dt>
-    <dd>{{ image.os }} - {{ image.architecture }}</dd>
+    <dd>{{ image.Os }} - {{ image.Architecture }}</dd>
     <dt>Size</dt>
     <dd>{{ image.Size || image.info.VirtualSize | calcMem }}</dd>
     <dt>Created</dt>
-    <dd>{{ image.created | date }}</dd>
+    <dd>{{ image.Created | date }}</dd>
     <dt>Parent</dt>
-    <dd><a data-ng-href="#!/image/{{ image.parent| shortTag }}">{{ image.parent| shortTag }}</a></dd>
+    <dd><a data-ng-href="#!/image/{{ image.Parent| shortTag }}">{{ image.Parent| shortTag }}</a></dd>
     <dt>Container</dt>
-    <dd><a data-ng-href="#!/container/{{ image.container| shortTag }}">{{ image.container| shortTag }}</a></dd>
+    <dd><a data-ng-href="#!/container/{{ image.Container| shortTag }}">{{ image.Container| shortTag }}</a></dd>
 </dl>
 <hr/>
 <h3>History:</h3>

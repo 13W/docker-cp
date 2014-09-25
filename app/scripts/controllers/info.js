@@ -1,14 +1,9 @@
 'use strict';
 
 angular.module('dockerUiApp').controller('InfoCtrl', [
-    '$scope', 'Config', 'Docker', function ($scope, Config, Docker) {
-        $scope.info = null;
-        $scope.version = null;
+    '$scope', 'Config', 'info',
+    function ($scope, Config, info) {
+        $scope.info = info;
+        $scope.version = info.version;
         $scope.Config = Config;
-        Docker.info(function (info) {
-            $scope.info = info;
-        });
-        Docker.version(function (version) {
-            $scope.version = version;
-        })
     }]);

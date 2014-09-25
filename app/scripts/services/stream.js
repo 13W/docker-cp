@@ -1,6 +1,7 @@
 'use strict';
 
-var lowercase = function(string){return angular.isString(string) ? string.toLowerCase() : string;};
+var lowercase = function (string) { return angular.isString(string) ? string.toLowerCase() : string; };
+
 function int(str) {
     return parseInt(str, 10);
 }
@@ -10,17 +11,18 @@ if (isNaN(msie)) {
     msie = int((/trident\/.*; rv:(\d+)/.exec(lowercase(navigator.userAgent)) || [])[1]);
 }
 
-var XHR = window.XMLHttpRequest || function() {
+var XHR = window.XMLHttpRequest || function () {
     /* global ActiveXObject */
-    try { return new ActiveXObject('Msxml2.XMLHTTP.6.0'); } catch (e1) {}
-    try { return new ActiveXObject('Msxml2.XMLHTTP.3.0'); } catch (e2) {}
-    try { return new ActiveXObject('Msxml2.XMLHTTP'); } catch (e3) {}
+    try { return new ActiveXObject('Msxml2.XMLHTTP.6.0'); } catch (ignore) {}
+    try { return new ActiveXObject('Msxml2.XMLHTTP.3.0'); } catch (ignore) {}
+    try { return new ActiveXObject('Msxml2.XMLHTTP'); } catch (ignore) {}
     throw new Error('This browser does not support XMLHttpRequest.');
 };
 
 
 angular.module('dockerUiApp').factory('stream', [
-    '$q', '$timeout', '$rootScope', function ($q, $timeout, $rootScope) {
+    '$log', '$q', '$timeout', '$rootScope', 'Config',
+    function ($log, $q, $timeout, $rootScope, Config) {
         var ABORTED = -1;
 
         function Request(options) {
@@ -28,7 +30,7 @@ angular.module('dockerUiApp').factory('stream', [
             var defer = $q.defer(), xhr = this.xhr = new XHR(), headers = options.headers || {}, nextLine = 0, status;
 
             if (headers['X-Registry-Auth']) {
-                if ($rootScope.auth) {
+                if ($rootScope.auth && Config.features.registryAuth) {
                     headers['X-Registry-Auth'] = $rootScope.auth.data;
                 } else {
                     delete headers['X-Registry-Auth'];
@@ -72,19 +74,20 @@ angular.module('dockerUiApp').factory('stream', [
                     var indexOf = str.substring(startpos || 0).search(regex);
                     return (indexOf >= 0) ? (indexOf + (startpos || 0)) : indexOf;
                 }
-                
+
+                //noinspection JSLint
                 while (!!~(index = regexIndexOf(xhr.response, /}\s*{/, nextLine))) {
                     part = xhr.response.slice(nextLine, index + 1);
 
                     json = parse(part);
                     if (json === undefined) {
                         break;
-                    } else {
-                        response.push(json);
-                        nextLine = index + 1;
                     }
+
+                    response.push(json);
+                    nextLine = index + 1;
                 }
-                
+
                 //last try
                 part = xhr.response.slice(nextLine);
 
@@ -93,7 +96,7 @@ angular.module('dockerUiApp').factory('stream', [
                     response.push(json);
                     nextLine = xhr.response.length;
                 }
-                
+
                 return response;
             }
 
@@ -115,11 +118,11 @@ angular.module('dockerUiApp').factory('stream', [
                     }
                 };
             }
-            
+
             xhr.onerror = function (error) {
-                console.error(error);
+                $log.error(error);
             };
-            
+
             if (options.withCredentials) {
                 xhr.withCredentials = true;
             }
@@ -129,18 +132,24 @@ angular.module('dockerUiApp').factory('stream', [
             }
 
             xhr.send(options.post || null);
+
+            function timeoutRequest() {
+                status = ABORTED;
+                if (xhr) {
+                    xhr.abort();
+                }
+            }
+
             if (options.timeout > 0) {
                 $timeout(timeoutRequest, options.timeout);
             }
 
-
-            function timeoutRequest() {
-                status = ABORTED;
-                xhr && xhr.abort();
-            }
             defer.promise.abort = function () {
-                xhr && xhr.abort();
+                if (xhr) {
+                    xhr.abort();
+                }
             };
+
             return defer.promise;
         }
 

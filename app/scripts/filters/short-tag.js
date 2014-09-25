@@ -1,8 +1,7 @@
 'use strict';
 
-angular.module('dockerUiApp')
-  .filter('shortTag', function () {
+angular.module('dockerUiApp').filter('shortTag', function () {
     return function (input) {
-      return input && input.slice(0, 12);
+        return input && input.slice(0, 12);
     };
-  });
+});

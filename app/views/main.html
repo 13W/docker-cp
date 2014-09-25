@@ -15,6 +15,11 @@
         <!-- Collect the nav links, forms, and other content for toggling -->
         <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
             <ul class="nav navbar-nav">
+                <li data-ng-model="currentLocation" btn-radio="'/hosts'">
+                    <a href="#!/hosts" style="padding-bottom: 0;padding-top: 10px;text-align: center;">Hosts<br/>
+                        <sup style="font-weight: bold;color: green;">{{docker_host}}</sup>
+                    </a>
+                </li>
                 <li data-ng-model="currentLocation" btn-radio="'/containers'"><a href="#!/containers">Containers</a></li>
                 <li data-ng-model="currentLocation" btn-radio="'/images'"><a href="#!/images">Images</a></li>
                 <li data-ng-model="currentLocation" btn-radio="'/events'"><a href="#!/events">Events</a></li>

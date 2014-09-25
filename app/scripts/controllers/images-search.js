@@ -1,26 +1,30 @@
 'use strict';
 
 angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
-    '$scope', '$modal', 'Docker', function ($scope, $modal, Docker) {
+    '$scope', '$modal', 'Docker',
+    function ($scope, $modal, Docker) {
         $scope.images = [];
         $scope.imageSearch = '';
         $scope.maxRate = 0;
         $scope.doSearch = function () {
             Docker.searchImage({term: $scope.imageSearch}, function (images) {
                 images.forEach(function (image) {
-                    $scope.maxRate = $scope.maxRate >= image.star_count ? $scope.maxRate : image.star_count; 
+                    /** @namespace image.star_count */
+                    $scope.maxRate = $scope.maxRate >= image.star_count ? $scope.maxRate : image.star_count;
                 });
                 $scope.images = images;
             });
         };
 
+        //noinspection JSUnusedLocalSymbols,JSLint
         function star(e, data, alt) {
             return '<i class="glyphicon glyphicon-star' + (!e ? '-empty' : '') + '"' + (alt !== undefined ? ' title="' + alt + '"' : '') + '></i>';
         }
-        
+
         function rating(e) {
-            var rating = Math.round(!$scope.maxRate ? 0 : e/$scope.maxRate*5);
-            return [1,2,3,4,5].map(function (o, i) { return star(rating && i <= rating, undefined, e) }).join('');
+            var rate = Math.round(!$scope.maxRate ? 0 : e / $scope.maxRate * 5);
+            //noinspection JSLint
+            return [1, 2, 3, 4, 5].map(function (o, i) { return star(rate && i <= rate, undefined, e); }).join('');
         }
         function isEmpty(e) {
             var i;
@@ -31,7 +35,7 @@ angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
             }
             return true;
         }
-        
+
         $scope.selectImageTag = function (image, callback) {
             Docker.getImageTags(image.name).then(function (tags) {
                 $modal.open({
@@ -52,11 +56,11 @@ angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
                 });
             });
         };
-        
+
         $scope.downloadImage = function (image, tag) {
             tag = tag || 'latest';
             $scope.progress = {};
-            var $modalWindow = $modal.open({
+            $modal.open({
                 templateUrl: 'views/download-image.html',
                 keyboard: false,
                 backdrop: 'static',
@@ -83,12 +87,14 @@ angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
                 progressHandler: function (data) {
                     if (Array.isArray(data)) {
                         data.forEach(function (data) {
+                            /** @namespace data.progressDetail */
                             if (!data.id) {
                                 image.statusMessage = data.status;
                                 return;
                             }
-                            var ptr = $scope.progress[data.id] = $scope.progress[data.id] || {active: true, total: 0, k: 0};
-                            
+                            var ptr = ($scope.progress[data.id] || {active: true, total: 0, k: 0});
+                            $scope.progress[data.id] = ptr;
+
                             if (!isEmpty(data.progressDetail)) {
                                 ptr.start = ptr.start || new Date(data.progressDetail.start * 1000);
                                 ptr.total = data.progressDetail.total;
@@ -106,12 +112,12 @@ angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
                     }
                 }
             }, function () {
-                alert('Download complete');
-                console.warn('Download complete', arguments);
-                $modalWindow.close();
+//                alert('Download complete');
+                console.warn('Download complete?', arguments);
+//                $modalWindow.close();
             });
         };
-        
+
         $scope.imagesOpts = {
             colDef      : [
                 {name: 'Name', field: 'name'},
@@ -119,11 +125,11 @@ angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
                 {name: 'Official', field: 'is_official', map: star},
                 {name: 'Rating', field: 'star_count', map: rating},
                 {
-                    name: 'Description', 
-                    field: 'description', 
+                    name: 'Description',
+                    field: 'description',
                     style: "max-width: 500px;white-space: nowrap; overflow: hidden; text-overflow: ellipsis;",
-                    map: function (e) {
-                        return '<span popover="{{ row.description }}" popover-trigger="mouseenter">{{ row.description }}</span>';
+                    map: function () {
+                        return '<span data-popover="{{ row.description }}" data-popover-trigger="mouseenter">{{ row.description }}</span>';
                     }
                 },
                 {name     : 'Actions', buttons: [

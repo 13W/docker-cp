@@ -13,7 +13,8 @@
  */
 
 angular.module('dockerUiApp').controller('ContainersCtrl', [
-    '$scope', '$location', 'Docker', function ($scope, $location, Docker) {
+    '$scope', '$location', 'Docker',
+    function ($scope, $location, Docker) {
         $scope.containers = [];
         $scope.containerOpts = {
             colDef: [
@@ -21,7 +22,7 @@ angular.module('dockerUiApp').controller('ContainersCtrl', [
                     name: 'Id',
                     field: 'Id',
                     map  : function (e) {
-                        return e.slice(0, 12)
+                        return e.slice(0, 12);
                     },
                     link : '/container/{{Id | shortTag}}'
                 },
@@ -30,7 +31,7 @@ angular.module('dockerUiApp').controller('ContainersCtrl', [
                     field: 'Names',
                     map  : function (e) {
                         return e.map(function (e) {
-                            return e.slice(1)
+                            return e.slice(1);
                         }).join(',');
                     },
                     link : '/container/{{ Id | shortTag }}'
@@ -42,7 +43,7 @@ angular.module('dockerUiApp').controller('ContainersCtrl', [
                     name : 'Created',
                     field: 'Created',
                     map  : function (e) {
-                        return new Date(e*1000);
+                        return new Date(e * 1000);
                     },
                     filter: {name: 'date', options: 'mediumDate'}
                 }
@@ -50,7 +51,7 @@ angular.module('dockerUiApp').controller('ContainersCtrl', [
             rowClass: function (data) {
                 return {
                     success: data.Status && !/^Exit/g.test(data.Status)
-                }
+                };
             },
             sortBy: 'Status',
             globalFilter: true

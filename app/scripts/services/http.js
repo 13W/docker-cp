@@ -1,3 +1,4 @@
+"use strict";
 /**
  * User: Vladimir Bulyga <zero@ccxx.cc>
  * Project: docker-ui
@@ -10,10 +11,12 @@ angular.module('dockerUiApp').service('http', [
             errorHandler: null
         };
         function createUrl(map, params) {
+            //noinspection JSLint
             return map.replace(/(\/:[^\/]+)/g, function (a, s) {
-                var key = s.substr(2);
+                var key = s.substr(2),
+                    value;
                 if (params.hasOwnProperty(key)) {
-                    var value = params[key];
+                    value = params[key];
                     delete params[key];
                     return '/' + value;
                 }
@@ -25,12 +28,15 @@ angular.module('dockerUiApp').service('http', [
             var params = {},
                 keys = Object.getOwnPropertyNames(map),
                 length = keys.length,
-                k;
+                k,
+                key,
+                dataKey,
+                value;
 
             for (k = 0; k < length; k += 1) {
-                var key = keys[k],
-                    dataKey = map[key],
-                    value = dataKey;
+                key = keys[k];
+                dataKey = map[key];
+                value = dataKey;
 
                 if (dataKey[0] === '@') {
                     value = data[dataKey.substr(1)];
@@ -55,18 +61,25 @@ angular.module('dockerUiApp').service('http', [
                 // this is check after checking
                 if (!callback) {
                     callback = data;
-                    data = params = {};
+                    data = params;
+                }
+                if (!callback) {
+                    callback = angular.noop;
                 }
 
-                var errorHandler = params.hasOwnProperty('errorHandler') ? params.errorHandler : Config.errorHandler;
+                params = params || {};
+                var errorHandler = params.hasOwnProperty('errorHandler') ? params.errorHandler : Config.errorHandler,
+                    url,
+                    options,
+                    http;
                 delete params.errorHandler;
                 params = createParams(angular.extend({}, config.params), params);
-                var url = createUrl(Config.url(), params),
-                    options = {
-                        method: config.method,
-                        url: url,
-                        params: params
-                    };
+                url = createUrl(Config.url(), params);
+                options = {
+                    method: config.method,
+                    url: url,
+                    params: params
+                };
 
                 if (config.target) {
                     if (config.target === 'self') {
@@ -104,7 +117,7 @@ angular.module('dockerUiApp').service('http', [
                         } else if (status === 'error') {
                             callback.apply(this, args);
                             return;
-                        } else if (status !== 'error') {
+                        } else {
                             args.unshift(null);
                         }
 
@@ -112,15 +125,17 @@ angular.module('dockerUiApp').service('http', [
                     };
                 }
 
-                return $http(options)
-                    .success(function (response, status) {
+                http = $http(options);
+                if (angular.isFunction(callback)) {
+                    http.success(function (response, status) {
                         status = (!status || status > 400) ? 'error' : 'success';
                         if (!response) {
                             response = "Connection refused";
                         }
                         cb(status)(response);
-                    })
-                    .error(cb('error'));
+                    }).error(cb('error'));
+                }
+                return http;
             };
         }
 
@@ -140,21 +155,24 @@ angular.module('dockerUiApp').service('http', [
                 url: url
             });
 
-            var data = new FormData();
-            var metadata = {path: path, files: {}};
+            var data = new FormData(),
+                metadata = {path: path, files: {}},
+                fileIndex,
+                file,
+                service;
 
-            for (var fileIndex = 0; fileIndex < files.length; fileIndex += 1) {
-                var file = files[fileIndex];
+            for (fileIndex = 0; fileIndex < files.length; fileIndex += 1) {
+                file = files[fileIndex];
                 metadata.files[file.name] = file.size;
             }
 
             data.append('metadata', JSON.stringify(metadata));
 
-            for (var fileIndex = 0; fileIndex < files.length; fileIndex += 1) {
+            for (fileIndex = 0; fileIndex < files.length; fileIndex += 1) {
                 data.append('uploadInput', files[fileIndex]);
             }
 
-            var service = createService({
+            service = createService({
                 uploadFile: {
                     method: 'POST',
                     data: data,

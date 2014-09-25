@@ -119,3 +119,7 @@ ul.pager li, ul.nav.nav-tabs li{
 .search-input, .selectize-control {
     width: 100% !important;
 }
+
+.popover-content {
+    word-wrap: break-word;
+}

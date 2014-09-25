@@ -1,13 +1,15 @@
 'use strict';
 
-angular.module('dockerUiApp').config(['$httpProvider', function ($httpProvider) {
-        $httpProvider.interceptors.push(['$rootScope', function ($rootScope) {
+angular.module('dockerUiApp').config([
+    '$httpProvider',
+    function ($httpProvider) {
+        $httpProvider.interceptors.push(['$rootScope', 'Config', function ($rootScope, Config) {
             return {
                 request: function (config) {
                     config.headers = config.headers || {};
 
                     if (config.headers['X-Registry-Auth']) {
-                        if ($rootScope.auth) {
+                        if ($rootScope.auth && Config.features.registryAuth) {
                             config.headers['X-Registry-Auth'] = $rootScope.auth.data;
                         } else {
                             delete config.headers['X-Registry-Auth'];
@@ -30,14 +32,23 @@ angular.module('dockerUiApp').config(['$httpProvider', function ($httpProvider) 
                     $rootScope.alert.value = {type: 'warning', msg: rejection.data};
                     return rejection;
                 }
-            }
+            };
         }]);
-    }]).controller('MainCtrl', [
-        '$scope', '$log', '$rootScope', '$http', '$location', '$cookies', '$base64', 'cfpLoadingBar', 'Docker',
-        function ($scope, $log, $rootScope, $http, $location, $cookies, $base64, cfpLoadingBar, Docker) {
+    }])
+    .controller('MainCtrl', [
+        '$scope', '$log', '$rootScope', '$location', '$cookies', '$base64', 'cfpLoadingBar', 'Docker', 'Config',
+        function ($scope, $log, $rootScope, $location, $cookies, $base64, cfpLoadingBar, Docker, Config) {
             $rootScope.search = $scope.search = {value: ''};
             $rootScope.alert = $scope.alert = {value: null};
             $scope.currentLocation = $location.$$path.split('/').slice(0, 2).join('/');
+            $scope.docker_host = $rootScope.docker_host || Config.host;
+
+            $rootScope.$watch('docker_host', function (docker_host) {
+                if (docker_host !== $scope.docker_host) {
+                    $scope.docker_host = $rootScope.docker_host || Config.host;
+                }
+            });
+
             $rootScope.$on('$routeChangeSuccess', function (event, next) {
                 $scope.currentLocation = (next.$$route && next.$$route.originalPath) ||
                                          $location.$$path.split('/').slice(0, 2).join('/');
@@ -57,7 +68,7 @@ angular.module('dockerUiApp').config(['$httpProvider', function ($httpProvider) 
                         }
                         delete $scope.auth.password;
                     });
-                } catch(e) {
+                } catch (e) {
                     $log.error('Failed to parse cookies');
                     $scope.auth = $rootScope.auth = $cookies.auth = '';
                 }
@@ -72,5 +83,5 @@ angular.module('dockerUiApp').config(['$httpProvider', function ($httpProvider) 
                         $cookies.auth = JSON.stringify(auth);
                     }
                 });
-            }
+            };
         }]);

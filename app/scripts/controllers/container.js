@@ -1,6 +1,7 @@
 'use strict';
 
-angular.module('dockerUiApp').controller('ContainerCtrl', ['$scope', '$routeSegment', '$timeout', '$location', 'Config', 'Docker', 'container',
+angular.module('dockerUiApp').controller('ContainerCtrl', [
+    '$scope', '$routeSegment', '$timeout', '$location', 'Config', 'Docker', 'container',
     function ($scope, $routeSegment, $timeout, $location, Config, Docker, container) {
         $scope.active = true;
         $scope.container = container;
@@ -14,7 +15,7 @@ angular.module('dockerUiApp').controller('ContainerCtrl', ['$scope', '$routeSegm
             rowClass: function (row) {
                 return {
                     'warning': !!row.Kind
-                }
+                };
             },
             maxSize: 5
         };
@@ -37,9 +38,10 @@ angular.module('dockerUiApp').controller('ContainerCtrl', ['$scope', '$routeSegm
 
         $scope.logs = function () {
             var logTerminalElement = angular.element('#logTerminal')[0];
-            if (!(logTerminalElement && $scope.containerId || $scope.Console.logs.terminal) || $scope.Console.logs.terminal) {
+            if (!((logTerminalElement && $scope.containerId) || $scope.Console.logs.terminal) || $scope.Console.logs.terminal) {
                 return;
             }
+            //noinspection JSLint
             var terminal = $scope.Console.logs.terminal = new Terminal({
                 cols: 0,
                 rows: 0,
@@ -48,7 +50,8 @@ angular.module('dockerUiApp').controller('ContainerCtrl', ['$scope', '$routeSegm
                 cursorBlink: false
             });
             terminal.open(logTerminalElement);
-            var connection = $scope.Console.logs.connection = Docker.logs({ID: $scope.containerId, stdout:1, stderr: 1}, function (data) {
+            //noinspection JSLint
+            var connection = $scope.Console.logs.connection = Docker.logs({ID: $scope.containerId, stdout:1, stderr: 1, tail: 100}, function (data) {
                 if (logTerminalElement) {
                     data.split('\n').forEach(function (data) {
                         terminal.write(data + '\r\n');
@@ -66,19 +69,19 @@ angular.module('dockerUiApp').controller('ContainerCtrl', ['$scope', '$routeSegm
                 Docker.start({ID: $scope.containerId}, reload);
             }
         };
-        
+
         $scope.stop = function () {
             if ($scope.containerId) {
                 Docker.stop({ID: $scope.containerId}, reload);
             }
         };
-        
+
         $scope.restart = function () {
             if ($scope.containerId) {
                 Docker.restart({ID: $scope.containerId}, reload);
             }
         };
-        
+
         $scope.kill = function () {
             if ($scope.containerId) {
                 Docker.kill({ID: $scope.containerId}, reload);
@@ -94,7 +97,7 @@ angular.module('dockerUiApp').controller('ContainerCtrl', ['$scope', '$routeSegm
                 });
             }
         };
-        
+
         $scope.commit = function () {
             if ($scope.containerId) {
                 Docker.commit($scope.container, function (image) {
@@ -104,7 +107,7 @@ angular.module('dockerUiApp').controller('ContainerCtrl', ['$scope', '$routeSegm
                 });
             }
         };
-        
+
         function monitor() {
             if ($scope.active) {
                 if ($scope.Console.socket.readyState !== 1) {
@@ -121,8 +124,8 @@ angular.module('dockerUiApp').controller('ContainerCtrl', ['$scope', '$routeSegm
                 if (!$scope.Console.socket) {
                     var parser = document.createElement('a');
                     parser.href = Config.host;
-                    
-                    $scope.Console.socket = new WebSocket((parser.protocol === 'https:' ? 'wss' : 'ws') + '://' + parser.host + '/containers/' + 
+
+                    $scope.Console.socket = new WebSocket((parser.protocol === 'https:' ? 'wss' : 'ws') + '://' + parser.host + '/containers/' +
                         $scope.containerId + '/attach/ws?logs=0&stream=1&stdout=1&stderr=1&stdin=1');
 
                     $scope.Console.terminal = new Terminal({
@@ -132,19 +135,19 @@ angular.module('dockerUiApp').controller('ContainerCtrl', ['$scope', '$routeSegm
                         screenKeys: true
                     });
 
-                    $scope.Console.socket.onopen = function() {
+                    $scope.Console.socket.onopen = function () {
                         monitor();
                     };
 
-                    $scope.Console.socket.onmessage = function(event) {
+                    $scope.Console.socket.onmessage = function (event) {
                         $scope.Console.terminal.write(event.data);
                     };
 
-                    $scope.Console.socket.onclose = function() {
+                    $scope.Console.socket.onclose = function () {
                         $scope.Console.terminal.destroy();
                     };
 
-                    $scope.Console.terminal.on('data', function(data) {
+                    $scope.Console.terminal.on('data', function (data) {
                         $scope.Console.socket.send(data);
                     });
 
@@ -153,13 +156,13 @@ angular.module('dockerUiApp').controller('ContainerCtrl', ['$scope', '$routeSegm
                 }
             }
         };
-        
+
         $scope.getChanges = function () {
             Docker.changes({ID: $scope.containerId}, function (changes) {
                 $scope.changes = changes;
             });
         };
-        
+
         $scope.createAs = function () {
             Docker.createContainer($scope.container.Config, function (response) {
                 if (response) {
@@ -167,12 +170,11 @@ angular.module('dockerUiApp').controller('ContainerCtrl', ['$scope', '$routeSegm
                 }
             });
         };
-        
+
         $scope.export = function () {
-            Docker.export({ID: $scope.containerId}, function () {
-                console.warn(arguments);
-            });
+            Docker.export({ID: $scope.containerId});
         };
+
         function destroy() {
             $scope.active = false;
             $scope.activeTab = {};
@@ -190,6 +192,7 @@ angular.module('dockerUiApp').controller('ContainerCtrl', ['$scope', '$routeSegm
                 $scope.Console.terminal.destroy();
             }
         }
+
         $scope.$on('$destroy', destroy);
         $scope.$on('$routeChangeSuccess', function () {
             $routeSegment.chain.slice(-1)[0].reload();

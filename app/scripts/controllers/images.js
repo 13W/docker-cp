@@ -99,5 +99,9 @@ angular.module('dockerUiApp').controller('ImagesCtrl', [
             $location.path('/images/search');
         };
 
+        $scope.buildImage = function () {
+            $location.path('/images/build');
+        };
+
         $scope.reload();
     }]);

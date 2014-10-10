@@ -17,7 +17,7 @@ angular
             $routeSegmentProvider.options.autoLoadTemplates = true;
             $routeSegmentProvider
                 .when('/', 'root')
-                .when('^/set/:key/:value*', 'root.set')
+                .when('^/set/host/:value*', 'root.set')
                 .when('/info', 'root.info')
                 .when('/events', 'root.events')
                 .when('/container/create', 'root.createContainer')
@@ -34,10 +34,17 @@ angular
                     controller : 'MainCtrl',
                     title      : 'Docker.io: Control Panel',
                     resolve    : {
-                        data   : ['$cookies', 'Docker', function ($cookies, Docker) {
+                        data   : ['$q', '$cookies', '$location', 'Docker', function ($q, $cookies, $location, Docker) {
+                            var defer = $q.defer();
                             if ($cookies.docker_host) {
-                                Docker.connectTo($cookies.docker_host);
+                                Docker.connectTo($cookies.docker_host, function (error) {
+                                    defer.resolve();
+                                    if (error) {
+                                        $location.path('/hosts');
+                                    }
+                                });
                             }
+                            return defer.promise;
                         }]
                     }
                 }).within()
@@ -51,16 +58,20 @@ angular
                 })
                 .segment('set', {
                     resolve: {
-                        data: ['$q', '$route', 'Config', 'Docker', function ($q, $route, Config, Docker) {
+                        data: ['$q', '$route', '$location', 'Docker', function ($q, $route, $location, Docker) {
                             var defer = $q.defer(),
-                                key = $route.current.params.key,
                                 host = $route.current.params.value;
-                            Config[key] = host;
 
-                            Docker.version(function (version) {
-                                defer.resolve(version);
-                                Docker.connectTo(host);
+                            Docker.connectTo(host, function (error) {
+                                if (error) {
+                                    $location.path('/hosts');
+                                    return defer.reject(error);
+                                }
+                                Docker.version(function (version) {
+                                    defer.resolve(version);
+                                });
                             });
+
                             return defer.promise;
                         }]
                     }

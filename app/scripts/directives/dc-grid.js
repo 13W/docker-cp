@@ -59,10 +59,13 @@ angular.module('dockerUiApp').directive('dcGrid', [
                 scope.maxSize = scope.options.maxSize || 10;
                 scope.nested = !!scope.options.nested;
                 scope.active = null;
+                scope.rows = [];
+
                 var filtered = [],
                     progress = false;
                 function init(rows) {
                     if (!rows.length) {
+                        scope.rows = [];
                         return;
                     }
                     scope.totalItems = rows.length;

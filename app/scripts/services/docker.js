@@ -30,6 +30,7 @@ angular.module('dockerUiApp').service('Docker', [
                 return Config.host + '/:service/:p1/:p2';
             },
             errorHandler: function (error) {
+                $rootScope.alert = $rootScope.alert || {};
                 $rootScope.alert.value = {type: 'error', msg: error};
 
             }
@@ -38,6 +39,7 @@ angular.module('dockerUiApp').service('Docker', [
         http.createService({
             containers   : {
                 method: 'GET',
+                cache : false,
                 params: {
                     service: 'containers',
                     p1     : 'json',
@@ -156,6 +158,7 @@ angular.module('dockerUiApp').service('Docker', [
             },
             images       : {
                 method: 'GET',
+                cache : false,
                 params: {
                     service: 'images',
                     p1     : 'json',
@@ -186,6 +189,16 @@ angular.module('dockerUiApp').service('Docker', [
                     service: 'images',
                     p1     : '@ID',
                     p2     : 'history'
+                }
+            },
+            tagImage     : {
+                method: 'POST',
+                params: {
+                    service: 'images',
+                    p1     : '@ID',
+                    p2     : 'tag',
+                    repo   : '=',
+                    force  : 0
                 }
             },
             deleteImage  : {
@@ -327,7 +340,7 @@ angular.module('dockerUiApp').service('Docker', [
                     $scope.ok = function () {
                         var Volumes = {}, Binds = [], Container = angular.extend({}, $scope.input);
                         Container.Cmd = Container.Cmd || '';
-                        Container.Cmd = Container.Cmd.match(/(?:[^\s"]+|"[^"]*")+/g).map(function (string) {
+                        Container.Cmd = (Container.Cmd.match(/(?:[^\s"]+|"[^"]*")+/g) || []).map(function (string) {
                             var firstChar = string.substr(0, 1),
                                 lastChar = string.substr(-1);
 
@@ -566,18 +579,28 @@ angular.module('dockerUiApp').service('Docker', [
         Docker.prototype.connectTo = function (host, callback) {
             callback = callback || angular.noop;
             var self = this,
-                parser = document.createElement('a');
+                defer = $q.defer(),
+                parser = document.createElement('a'),
+                hostKeys,
+                length,
+                hosts,
+                ptr;
+
             parser.href = host;
             host = parser.protocol + '//' + parser.host;
-            $http.get(host + '/_ping').then(function (response) {
-                if (response.data !== 'OK') {
-                    // Error;
-                    return callback(new Error('Failed to connect to host "' + host + '"'));
+
+            $http.get(host + '/_ping', {timeout: 3000, cache: false}).then(function (response) {
+                if (response.status !== 200) {
+                    var error = (response.statusText || 'Failed to connect to host "' + host + '"')
+                        + (response.data ? '\n' + response.data : '');
+
+                    defer.reject(new Error(error));
+                    return callback(new Error(error));
                 }
                 $rootScope.docker_host = Config.host = $cookies.docker_host = host;
 
-                var hosts = self.hosts(),
-                    ptr = hosts[host];
+                hosts = self.hosts();
+                ptr = hosts[host];
 
                 if (ptr) {
                     delete hosts[host];
@@ -590,17 +613,19 @@ angular.module('dockerUiApp').service('Docker', [
                     };
                 }
 
-                var hostKeys = Object.getOwnPropertyNames(hosts),
-                    length = hostKeys.length;
+                hostKeys = Object.getOwnPropertyNames(hosts);
+                length = hostKeys.length;
 
                 Object.keys(hosts).splice(0, length - Config.hostsHistoryLength).forEach(function (host) {
                     delete hosts[host];
                 });
 
                 $cookies.docker_hosts = JSON.stringify(hosts);
-                $location.url('/info');
+                defer.resolve(hosts);
                 callback(null, hosts);
             });
+
+            return defer.promise;
         };
 
         return new Docker();

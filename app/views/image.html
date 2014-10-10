@@ -10,20 +10,38 @@
     <i class="glyphicon glyphicon-upload"></i> Push</button>
 -->
 <hr/>
-<dl class="dl-horizontal">
-    <dt>Id</dt>
-    <dd>{{ image.Id| shortTag }}</dd>
-    <dt>OS</dt>
-    <dd>{{ image.Os }} - {{ image.Architecture }}</dd>
-    <dt>Size</dt>
-    <dd>{{ image.Size || image.info.VirtualSize | calcMem }}</dd>
-    <dt>Created</dt>
-    <dd>{{ image.Created | date }}</dd>
-    <dt>Parent</dt>
-    <dd><a data-ng-href="#!/image/{{ image.Parent| shortTag }}">{{ image.Parent| shortTag }}</a></dd>
-    <dt>Container</dt>
-    <dd><a data-ng-href="#!/container/{{ image.Container| shortTag }}">{{ image.Container| shortTag }}</a></dd>
-</dl>
+<table>
+    <tr>
+        <td>
+            <dl class="dl-horizontal">
+                <dt>Id</dt>
+                <dd>{{ image.Id| shortTag }}</dd>
+                <dt>OS</dt>
+                <dd>{{ image.Os }} - {{ image.Architecture }}</dd>
+                <dt>Size</dt>
+                <dd>{{ image.Size || image.info.VirtualSize | calcMem }}</dd>
+                <dt>Created</dt>
+                <dd>{{ image.Created | date }}</dd>
+                <dt>Parent</dt>
+                <dd><a data-ng-href="#!/image/{{ image.Parent| shortTag }}">{{ image.Parent| shortTag }}</a></dd>
+                <dt>Container</dt>
+                <dd><a data-ng-href="#!/container/{{ image.Container| shortTag }}">{{ image.Container| shortTag }}</a></dd>
+            </dl>
+        </td>
+        <td style="vertical-align: text-top;">
+            <dl class="dl-horizontal">
+                <dt>Author</dt>
+                <dd>{{ image.Author }}</dd>
+                <dt>Working Dir</dt>
+                <dd>{{ image.Config.WorkingDir }}</dd>
+                <dt>Command</dt>
+                <dd>{{ image.Config.Entrypoint.join(' ') || ''}} {{ image.Config.Cmd.join(' ') }}</dd>
+                <dt>Comment</dt>
+                <dd>{{ image.Comment }}</dd>
+            </dl>
+        </td>
+    </tr>
+</table>
 <hr/>
 <h3>History:</h3>
 <dc-grid data-options="imageHistoryOpts" data-items="image.history"></dc-grid>

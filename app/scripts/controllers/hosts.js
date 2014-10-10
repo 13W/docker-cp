@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('dockerUiApp').controller('HostsCtrl', [
-    '$rootScope', '$scope', 'Docker', 'hosts',
-    function ($rootScope, $scope, Docker, hosts) {
+    '$rootScope', '$scope', '$location', 'Docker', 'hosts',
+    function ($rootScope, $scope, $location, Docker, hosts) {
         function normalize(hosts) {
             var result = [],
                 host;
@@ -29,7 +29,9 @@ angular.module('dockerUiApp').controller('HostsCtrl', [
             Docker.connectTo(host, function (error) {
                 if (error) {
                     $rootScope.alert.value = {msg: error.message, level: 'error'};
+                    return;
                 }
+                $location.path('/info');
             });
         };
 

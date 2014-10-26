@@ -34,18 +34,20 @@ angular
                     controller : 'MainCtrl',
                     title      : 'Docker.io: Control Panel',
                     resolve    : {
-                        data   : ['$q', '$cookies', '$location', 'Docker', function ($q, $cookies, $location, Docker) {
-                            var defer = $q.defer();
-                            if ($cookies.docker_host) {
+                        data: [
+                            '$q', '$cookies', '$location', 'Config', 'Docker',
+                            function ($q, $cookies, $location, Config, Docker) {
+                                var defer = $q.defer();
+                                $cookies.docker_host = $cookies.docker_host || Config.host;
                                 Docker.connectTo($cookies.docker_host, function (error) {
                                     defer.resolve();
                                     if (error) {
                                         $location.path('/hosts');
                                     }
                                 });
+                                return defer.promise;
                             }
-                            return defer.promise;
-                        }]
+                        ]
                     }
                 }).within()
                 .segment('logout', {
@@ -118,7 +120,10 @@ angular
                     resolve    : {
                         container: ['$q', '$route', 'Docker', function ($q, $route, Docker) {
                             var containerId = $route.current.params.containerId, defer = $q.defer();
-                            Docker.inspect({ID: containerId, errorHandler: false}, function (error, container) {
+                            if (!containerId) {
+                                return;
+                            }
+                            Docker.inspect({Id: containerId, errorHandler: false}, function (error, container) {
                                 if (error) {
                                     defer.reject(error);
                                 } else {
@@ -150,10 +155,14 @@ angular
                             var imageId = $route.current.params.imageId,
                                 defer = $q.defer();
 
+                            if (!imageId) {
+                                return;
+                            }
+
                             $q.all([
-                                Docker.inspectImage({ID: imageId, errorHandler: false}),
+                                Docker.inspectImage({Id: imageId, errorHandler: false}),
                                 Docker.images({all: true, tree: false}),
-                                Docker.historyImage({ID: imageId})
+                                Docker.historyImage({Id: imageId})
                             ]).then(function (results) {
                                 var image = results[0].data;
 

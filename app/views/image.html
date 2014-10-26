@@ -19,7 +19,7 @@
                 <dt>OS</dt>
                 <dd>{{ image.Os }} - {{ image.Architecture }}</dd>
                 <dt>Size</dt>
-                <dd>{{ image.Size || image.info.VirtualSize | calcMem }}</dd>
+                <dd>{{ image.Size || image.info.VirtualSize | calcMem }} ({{ image.Size | calcMem }})</dd>
                 <dt>Created</dt>
                 <dd>{{ image.Created | date }}</dd>
                 <dt>Parent</dt>
@@ -35,7 +35,7 @@
                 <dt>Working Dir</dt>
                 <dd>{{ image.Config.WorkingDir }}</dd>
                 <dt>Command</dt>
-                <dd>{{ image.Config.Entrypoint.join(' ') || ''}} {{ image.Config.Cmd.join(' ') }}</dd>
+                <dd>{{ image.history[0].CreatedBy || ''}}</dd>
                 <dt>Comment</dt>
                 <dd>{{ image.Comment }}</dd>
             </dl>

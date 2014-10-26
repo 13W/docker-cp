@@ -115,6 +115,7 @@
     </tab>
     <tab heading="Terminal" active="activeTab[2]" select="activeTab[2] = true;attachConsole()" data-disabled="!container.State.Running">
         <pre><div id="terminal" style="line-height: 1"></div></pre>
+        <button data-ng-click="openInNewWindow()" class="btn">Open in new window</button>
     </tab>
     <tab heading="Log" active="activeTab[3]" select="activeTab[3] = true;logs()">
         <pre><code id="logTerminal" style="line-height: 1;height: 200px;"></code></pre>

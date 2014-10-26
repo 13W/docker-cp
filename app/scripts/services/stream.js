@@ -21,141 +21,162 @@ var XHR = window.XMLHttpRequest || function () {
 
 
 angular.module('dockerUiApp').factory('stream', [
-    '$log', '$q', '$timeout', '$rootScope', 'Config',
-    function ($log, $q, $timeout, $rootScope, Config) {
+    '$q', '$timeout', '$rootScope', 'Config',
+    function ($q, $timeout, $rootScope, Config) {
         var ABORTED = -1;
 
-        function Request(options) {
+        return {
+            request: function (options) {
+                var xhr = new XHR(),
+                    headers = options.headers || {},
+                    defer = $q.defer(),
+                    nextLine = 0,
+                    progress = {
+                        completed: 0,
+                        current: 0
+                    },
+                    status;
 
-            var defer = $q.defer(), xhr = this.xhr = new XHR(), headers = options.headers || {}, nextLine = 0, status;
-
-            if (headers['X-Registry-Auth']) {
-                if ($rootScope.auth && Config.features.registryAuth) {
-                    headers['X-Registry-Auth'] = $rootScope.auth.data;
-                } else {
-                    delete headers['X-Registry-Auth'];
-                }
-            }
-
-            xhr.open(options.method, options.url, true);
-
-            angular.forEach(headers, function (value, key) {
-                if (angular.isDefined(value)) {
-                    xhr.setRequestHeader(key, value);
-                }
-            });
-
-            xhr.onreadystatechange = function () {
-                if (xhr.readyState === 4) {
-                    var responseHeaders = null, response = null;
-
-                    if (status !== ABORTED) {
-                        responseHeaders = xhr.getAllResponseHeaders();
-                        response = xhr.responseType ? xhr.response : xhr.responseText;
+                function jsonStreamParser() {
+                    var response = [], index, part, json;
+                    function parse(part) {
+                        try {
+                            return angular.fromJson(part);
+                        } catch (e) {
+                            return undefined;
+                        }
                     }
 
-                    // responseText is the old-school way of retrieving response (supported by IE8 & 9)
-                    // response/responseType properties were introduced in XHR Level2 spec (supported by IE10)
-                    defer.resolve(status || xhr.status, response, responseHeaders);
-                }
-            };
-
-            function jsonStreamParser() {
-                var response = [], index, part, json;
-                function parse(part) {
-                    try {
-                        return angular.fromJson(part);
-                    } catch (e) {
-                        return undefined;
+                    function regexIndexOf(str, regex, startpos) {
+                        var indexOf = str.substring(startpos || 0).search(regex);
+                        return (indexOf >= 0) ? (indexOf + (startpos || 0)) : indexOf;
                     }
-                }
 
-                function regexIndexOf(str, regex, startpos) {
-                    var indexOf = str.substring(startpos || 0).search(regex);
-                    return (indexOf >= 0) ? (indexOf + (startpos || 0)) : indexOf;
-                }
+                    //noinspection JSLint
+                    while (!!~(index = regexIndexOf(xhr.response, /}\s*\{/, nextLine))) {
+                        part = xhr.response.slice(nextLine, index + 1);
 
-                //noinspection JSLint
-                while (!!~(index = regexIndexOf(xhr.response, /}\s*{/, nextLine))) {
-                    part = xhr.response.slice(nextLine, index + 1);
+                        json = parse(part);
+                        if (json === undefined) {
+                            break;
+                        }
+
+                        response.push(json);
+                        nextLine = index + 1;
+                    }
+
+                    //last try
+                    part = xhr.response.slice(nextLine);
 
                     json = parse(part);
-                    if (json === undefined) {
-                        break;
+                    if (json !== undefined) {
+                        response.push(json);
+                        nextLine = xhr.response.length;
                     }
 
-                    response.push(json);
-                    nextLine = index + 1;
+                    return response;
                 }
 
-                //last try
-                part = xhr.response.slice(nextLine);
-
-                json = parse(part);
-                if (json !== undefined) {
-                    response.push(json);
-                    nextLine = xhr.response.length;
-                }
-
-                return response;
-            }
-
-            if (angular.isFunction(options.progressHandler)) {
-
-                xhr.onprogress = function () {
+                function doProgress() {
+                    console.log('onProgress', xhr.readyState, xhr.status, progress);
                     //readyState: headers received 2, body received 3, done 4
-                    if (xhr.readyState !== 2 && xhr.readyState !== 3 && xhr.readyState !== 4) {
+                    if (progress.completed === progress.current) {
                         return;
                     }
-                    if (xhr.readyState === 3 && xhr.status !== 200) {
+
+                    progress.completed = progress.current;
+                    if (!xhr.response) {
                         return;
                     }
+
                     if (options.parseStream) {
                         options.progressHandler(jsonStreamParser());
                     } else {
                         options.progressHandler(xhr.response.slice(nextLine));
                         nextLine = xhr.response.length;
                     }
+                }
+
+                if (angular.isFunction(options.progressHandler)) {
+                    xhr.onprogress = function () {
+                        progress.current++;
+                        doProgress();
+                    };
+                }
+
+                xhr.onreadystatechange = function () {
+                    console.log('onReadyStateChange', xhr.readyState, xhr.status, progress);
+                    status = xhr.status;
+                    var responseHeaders = null,
+                        response = null;
+
+                    switch (xhr.readyState) {
+                    case 1:
+                    case 2:
+                    case 3:
+                        if (angular.isFunction(options.progressHandler) && progress.completed === progress.current) {
+                            progress.current++;
+                            doProgress();
+                        }
+                        break;
+                    case 4:
+                        if (status !== ABORTED) {
+                            responseHeaders = xhr.getAllResponseHeaders();
+                            response = xhr.responseType ? xhr.response : xhr.responseText;
+                        }
+
+                        // responseText is the old-school way of retrieving response (supported by IE8 & 9)
+                        // response/responseType properties were introduced in XHR Level2 spec (supported by IE10)
+                        defer.resolve(status || xhr.status, response, responseHeaders);
+                        break;
+                    }
                 };
-            }
 
-            xhr.onerror = function (error) {
-                $log.error(error);
-            };
-
-            if (options.withCredentials) {
-                xhr.withCredentials = true;
-            }
-
-            if (options.responseType) {
-                xhr.responseType = options.responseType;
-            }
-
-            xhr.send(options.post || null);
-
-            function timeoutRequest() {
-                status = ABORTED;
-                if (xhr) {
-                    xhr.abort();
+                if (options.withCredentials) {
+                    xhr.withCredentials = true;
                 }
-            }
 
-            if (options.timeout > 0) {
-                $timeout(timeoutRequest, options.timeout);
-            }
-
-            defer.promise.abort = function () {
-                if (xhr) {
-                    xhr.abort();
+                if (options.responseType) {
+                    xhr.responseType = options.responseType;
                 }
-            };
 
-            return defer.promise;
-        }
+                function timeoutRequest() {
+                    status = ABORTED;
+                    if (xhr) {
+                        xhr.abort();
+                    }
+                }
 
-        return {
-            request: function (options) {
-                return new Request(options);
+                if (options.timeout > 0) {
+                    $timeout(timeoutRequest, options.timeout);
+                }
+
+                xhr.open(options.method, options.url, true);
+                if (headers['X-Registry-Auth']) {
+                    if ($rootScope.auth && Config.features.registryAuth) {
+                        headers['X-Registry-Auth'] = $rootScope.auth.data;
+                    } else {
+                        delete headers['X-Registry-Auth'];
+                    }
+                }
+
+                angular.forEach(headers, function (value, key) {
+                    if (angular.isDefined(value)) {
+                        xhr.setRequestHeader(key, value);
+                    }
+                });
+
+                xhr.send(options.body);
+                defer.promise.abort = function () {
+                    if (xhr) {
+                        xhr.abort();
+                    }
+                };
+                defer.promise.ended = function () {
+                    return xhr.readyState === 4;
+                };
+
+                return defer.promise;
             }
         };
     }]);

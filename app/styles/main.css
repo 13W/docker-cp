@@ -123,3 +123,7 @@ ul.pager li, ul.nav.nav-tabs li{
 .popover-content {
     word-wrap: break-word;
 }
+.tags-input .host {
+     margin-top: 0; 
+     margin-bottom: 0; 
+}

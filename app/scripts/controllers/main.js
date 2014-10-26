@@ -76,7 +76,7 @@ angular.module('dockerUiApp').config([
 
             $scope.authenticate = function () {
                 Docker.authenticate(null, function (error, auth) {
-                    if (!error) {
+                    if (!error && auth) {
                         auth.data = $base64.encode(JSON.stringify(auth));
                         delete auth.password;
                         $scope.auth = $rootScope.auth = auth;

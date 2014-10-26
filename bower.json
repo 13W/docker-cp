@@ -17,9 +17,8 @@
     "angular-spinner-loading": "*",
     "angular-base64": "~2.0.2",
     "term.js": "~0.0.3",
-    "angular-ui-select": "~0.6.0",
+    "angular-ui-select": "~0.8.3",
     "ng-tags-input": "~2.1.1",
-    "selectize": "~0.11.0",
     "ng-json-explorer": "*"
   },
   "devDependencies": {

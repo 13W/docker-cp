@@ -5,7 +5,7 @@ angular.module('dockerUiApp').controller('ImageCtrl', [
     function ($scope, $routeSegment, $location, Docker, image) {
         $scope.image = image;
         $scope.destroyImage = function () {
-            Docker.deleteImage({ID: image.Id.slice(0, 12)}, function () {
+            Docker.deleteImage({Id: image.Id.slice(0, 12)}, function () {
                 $location.path('/images');
             });
         };

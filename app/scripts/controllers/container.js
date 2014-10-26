@@ -1,8 +1,13 @@
 'use strict';
 
+//noinspection JSLint
+if (typeof setImmediate === 'undefined') {
+    var setImmediate = setTimeout;
+}
+
 angular.module('dockerUiApp').controller('ContainerCtrl', [
-    '$scope', '$routeSegment', '$timeout', '$location', 'Config', 'Docker', 'container',
-    function ($scope, $routeSegment, $timeout, $location, Config, Docker, container) {
+    '$scope', '$routeSegment', '$timeout', '$location', 'Config', 'Docker', 'terminal', 'container',
+    function ($scope, $routeSegment, $timeout, $location, Config, Docker, tty, container) {
         $scope.active = true;
         $scope.container = container;
         $scope.containerId = container.Id.slice(0, 12);
@@ -26,7 +31,7 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
         $scope.activeTab = {};
         $scope.processList = function (tab) {
             if ($scope.containerId && $scope.container.State.Running) {
-                Docker.processList({ID: $scope.containerId, ps_args: 'axwuu'}, function (processList) {
+                Docker.processList({Id: $scope.containerId, ps_args: 'axwuu'}, function (processList) {
                     $scope.processList = processList;
                 });
             }
@@ -66,31 +71,31 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
 
         $scope.start = function () {
             if ($scope.containerId) {
-                Docker.start({ID: $scope.containerId}, reload);
+                Docker.start({Id: $scope.containerId}, reload);
             }
         };
 
         $scope.stop = function () {
             if ($scope.containerId) {
-                Docker.stop({ID: $scope.containerId}, reload);
+                Docker.stop({Id: $scope.containerId}, reload);
             }
         };
 
         $scope.restart = function () {
             if ($scope.containerId) {
-                Docker.restart({ID: $scope.containerId}, reload);
+                Docker.restart({Id: $scope.containerId}, reload);
             }
         };
 
         $scope.kill = function () {
             if ($scope.containerId) {
-                Docker.kill({ID: $scope.containerId}, reload);
+                Docker.kill({Id: $scope.containerId}, reload);
             }
         };
 
         $scope.destroy = function () {
             if ($scope.containerId) {
-                Docker.destroy({ID: $scope.containerId}, function (complete) {
+                Docker.destroy({Id: $scope.containerId}).then(function (complete) {
                     if (complete) {
                         $location.path('/containers');
                     }
@@ -100,7 +105,7 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
 
         $scope.commit = function () {
             if ($scope.containerId) {
-                Docker.commit($scope.container, function (image) {
+                Docker.commit($scope.container).then(function (image) {
                     if (image) {
                         $location.path('/image/' + image.Id.slice(0, 12));
                     }
@@ -108,63 +113,47 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
             }
         };
 
-        function monitor() {
-            if ($scope.active) {
-                if ($scope.Console.socket.readyState !== 1) {
-                    delete $scope.Console.socket;
-                    $scope.attachConsole();
-                } else {
-                    $timeout(monitor, 1000);
-                }
-            }
-        }
 
         $scope.attachConsole = function () {
-            if ($scope.containerId) {
-                if (!$scope.Console.socket) {
-                    var parser = document.createElement('a');
-                    parser.href = Config.host;
-
-                    $scope.Console.socket = new WebSocket((parser.protocol === 'https:' ? 'wss' : 'ws') + '://' + parser.host + '/containers/' +
-                        $scope.containerId + '/attach/ws?logs=0&stream=1&stdout=1&stderr=1&stdin=1');
-
-                    $scope.Console.terminal = new Terminal({
-                        cols: 0,
-                        rows: 0,
-                        useStyle: true,
-                        screenKeys: true
-                    });
-
-                    $scope.Console.socket.onopen = function () {
-                        monitor();
-                    };
-
-                    $scope.Console.socket.onmessage = function (event) {
-                        $scope.Console.terminal.write(event.data);
-                    };
-
-                    $scope.Console.socket.onclose = function () {
-                        $scope.Console.terminal.destroy();
-                    };
-
-                    $scope.Console.terminal.on('data', function (data) {
-                        $scope.Console.socket.send(data);
-                    });
-
-                    angular.element('#terminal').html("");
-                    $scope.Console.terminal.open(angular.element('#terminal')[0]);
-                }
+            if ($scope.containerId && $scope.Console.terminal) {
+                return;
             }
+            var parser = document.createElement('a'),
+                termContainer = angular.element('#terminal'),
+                url;
+            parser.href = Config.host;
+            url = (parser.protocol === 'https:' ? 'wss' : 'ws') + '://' + parser.host + '/containers/' +
+                $scope.containerId + '/attach/ws?logs=0&stream=1&stdout=1&stderr=1&stdin=1';
+
+            termContainer.html("");
+            $scope.Console.terminal = tty(termContainer[0], url);
+        };
+
+        $scope.openInNewWindow = function () {
+            var name = 'Terminal: ' + $scope.container.Name,
+                win = window.open('about:blank', name, 'width=540, height=322, ' +
+                    'location=no, menubar=no, resizable=no, scrollbars=no, status=no, titlebar=no, toolbar=no'),
+                terminal;
+            win.document.body.style.margin = 0;
+            win.document.body.style.padding = 0;
+            win.document.head.innerHTML = '<title>' + name + '</title>';
+            if (!$scope.Console.terminal) {
+                return;
+            }
+            terminal = tty(win.document.body, $scope.Console.terminal.address);
+            win.onbeforeunload = function () {
+                terminal.destroy();
+            };
         };
 
         $scope.getChanges = function () {
-            Docker.changes({ID: $scope.containerId}, function (changes) {
+            Docker.changes({Id: $scope.containerId}, function (changes) {
                 $scope.changes = changes;
             });
         };
 
         $scope.createAs = function () {
-            Docker.createContainer($scope.container.Config, function (response) {
+            Docker.createContainer($scope.container.Config).then(function (response) {
                 if (response) {
                     $location.path('/container/' + response.Id.slice(0, 12));
                 }
@@ -172,7 +161,7 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
         };
 
         $scope.export = function () {
-            Docker.export({ID: $scope.containerId});
+            Docker.export({Id: $scope.containerId});
         };
 
         function destroy() {
@@ -184,9 +173,6 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
             if ($scope.Console.logs.terminal) {
                 $scope.Console.logs.terminal.destroy();
                 $scope.Console.logs.terminal = false;
-            }
-            if ($scope.Console.socket) {
-                $scope.Console.socket.close();
             }
             if ($scope.Console.terminal) {
                 $scope.Console.terminal.destroy();

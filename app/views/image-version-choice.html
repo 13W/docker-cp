@@ -3,7 +3,7 @@
 </div>
 <div class="modal-body">
     <h3>Select tag</h3>
-    <ui-select data-ng-model="selected.tag" theme="selectize" style="width: 300px;">
+    <ui-select data-ng-model="selected.tag" theme="bootstrap">
         <ui-select-match placeholder="Select image tag">{{$select.selected.name}}</ui-select-match>
         <ui-select-choices repeat="tag in tags | filter: $select.search">
             <span data-ng-bind-html="tag.name | highlight: $select.search"></span>

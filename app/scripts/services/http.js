@@ -54,6 +54,16 @@ angular.module('dockerUiApp').service('http', [
 
         function createMethod(config) {
             return function (params, data, callback) {
+                if (angular.isFunction(params)) {
+                    callback = params;
+                    params = data = {};
+                } else if (angular.isFunction(data)) {
+                    callback = data;
+                    data = params;
+                } else if (!angular.isFunction(callback)) {
+                    callback = angular.noop;
+                }
+/*
                 if (!callback) {
                     callback = data;
                     data = params;
@@ -66,6 +76,7 @@ angular.module('dockerUiApp').service('http', [
                 if (!callback) {
                     callback = angular.noop;
                 }
+*/
 
                 params = params || {};
                 var errorHandler = params.hasOwnProperty('errorHandler') ? params.errorHandler : Config.errorHandler,
@@ -73,10 +84,10 @@ angular.module('dockerUiApp').service('http', [
                     options,
                     http;
                 delete params.errorHandler;
-                params = createParams(angular.extend({}, config.params), params);
-                url = createUrl(Config.url(), params);
+                url = createUrl(Config.url() + config.url, params);
+                params = createParams(angular.copy(config.params || {}), params);
                 options = {
-                    method: config.method,
+                    method: config.method || 'GET',
                     url: url,
                     params: params
                 };
@@ -87,7 +98,8 @@ angular.module('dockerUiApp').service('http', [
                         return undefined;
                     }
                 }
-                if (config.method === 'POST') {
+
+                if (config.method === 'POST' || config.method === 'PUT') {
                     options.data = data;
                 }
                 if (config.withCredentials) {

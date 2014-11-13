@@ -63,20 +63,6 @@ angular.module('dockerUiApp').service('http', [
                 } else if (!angular.isFunction(callback)) {
                     callback = angular.noop;
                 }
-/*
-                if (!callback) {
-                    callback = data;
-                    data = params;
-                }
-                // this is check after checking
-                if (!callback) {
-                    callback = data;
-                    data = params;
-                }
-                if (!callback) {
-                    callback = angular.noop;
-                }
-*/
 
                 params = params || {};
                 var errorHandler = params.hasOwnProperty('errorHandler') ? params.errorHandler : Config.errorHandler,
@@ -126,10 +112,11 @@ angular.module('dockerUiApp').service('http', [
                                 errorHandler.apply(null, args);
                                 return;
                             }
-                        } else if (status === 'error') {
-                            callback.apply(this, args);
-                            return;
                         } else {
+                            if (status === 'error') {
+                                callback.apply(this, args);
+                                return;
+                            }
                             args.unshift(null);
                         }
 

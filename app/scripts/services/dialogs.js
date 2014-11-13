@@ -70,8 +70,18 @@ angular.module('dockerUiApp')
                         },
                         controller: 'DestroyCtrl'
                     }).result;
+                },
+                pushImage: function pushImage(tags) {
+                    return $modal.open({
+                        templateUrl: 'views/push-image.html',
+                        resolve    : {
+                            tags   : function () {
+                                return tags;
+                            }
+                        },
+                        controller: 'PushImageCtrl'
+                    }).result;
                 }
             };
         }
-    ]
-);
+    ]);

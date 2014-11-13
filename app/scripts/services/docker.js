@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('dockerUiApp').service('Docker', [
-    '$rootScope', '$q', '$cookies', 'http', '$http', 'stream', 'Config', 'Dialogs',
-    function ($rootScope, $q, $cookies, http, $http, stream, Config, Dialogs) {
+    '$rootScope', '$q', '$cookies', 'http', '$http', 'urlParser', 'stream', 'Config', 'Dialogs',
+    function ($rootScope, $q, $cookies, http, $http, urlParser, stream, Config, Dialogs) {
         function Docker() {
             if (!(this instanceof Docker)) {
                 return new Docker();
@@ -144,7 +144,7 @@ angular.module('dockerUiApp').service('Docker', [
                     term   : '='
                 }
             },
-            pushImage    : {
+            uploadImage    : {
                 method: 'POST',
                 headers: {
                     'X-Registry-Auth': '='
@@ -166,7 +166,7 @@ angular.module('dockerUiApp').service('Docker', [
                 error : true
             },
             ping         : {
-                url   : '/ping'
+                url   : '/_ping'
             }
         }, Docker.prototype);
 
@@ -204,19 +204,25 @@ angular.module('dockerUiApp').service('Docker', [
 
         //noinspection JSAccessibilityCheck
         Docker.prototype.pushImage = function (options, callback) {
-            var opts = {
-                    url: Config.host + '/images/' + options.name + '/push?' + (options.query || ''),
-                    method: options.method || 'POST',
-                    headers: {
-    //                    'X-Registry-Auth': '='
+            var self = this;
+            Dialogs.pushImage(options.tags).then(function (tag) {
+                var parsedTag = self.parseTag(tag),
+                    opts = {
+                        url: Config.host + '/images/' + parsedTag.nameWithRegistry + '/push?' + (options.query || ''),
+                        method: options.method || 'POST',
+                        headers: {
+                            'X-Registry-Auth': '='
+                        },
+                        body: JSON.stringify({
+                            tag: parsedTag.tag || 'latest'
+                        }),
+                        parseStream: true,
+                        progressHandler: options.progressHandler
                     },
-                    parseStream: true,
-                    progressHandler: options.progressHandler
-                },
-                request = stream.request(opts);
+                    request = stream.request(opts);
 
-            request.then(callback);
-            return request;
+                request.then(callback);
+            });
         };
 
         //noinspection JSAccessibilityCheck
@@ -286,14 +292,13 @@ angular.module('dockerUiApp').service('Docker', [
             callback = callback || angular.noop;
             var self = this,
                 defer = $q.defer(),
-                parser = document.createElement('a'),
+                parsed = urlParser(host),
                 hostKeys,
                 length,
                 hosts,
                 ptr;
 
-            parser.href = host;
-            host = parser.protocol + '//' + parser.host;
+            host = parsed.protocol + '//' + parsed.host;
 
             $http.get(host + '/_ping', {timeout: 3000, cache: false}).then(function (response) {
                 if (response.status !== 200) {
@@ -332,6 +337,22 @@ angular.module('dockerUiApp').service('Docker', [
             });
 
             return defer.promise;
+        };
+
+        Docker.prototype.parseTag = function parseTag(tag) {
+            var parts = /(?:([^:]+:\d+)\/)?((?:([^\/]+)\/)?([^:]+))(?::([.]+))?$/.exec(tag);
+            if (!parts) {
+                return {};
+            }
+
+            return {
+                tag: parts[5],
+                name: parts[4],
+                repository: parts[3] || '',
+                fullname: parts[2],
+                registry: parts[1],
+                nameWithRegistry: (parts[1] ? parts[1] + '/' : '') + parts[2]
+            };
         };
 
         return new Docker();

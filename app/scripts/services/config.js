@@ -5,6 +5,6 @@ angular.module('dockerUiApp')
         host: "http://localhost:4243",
         hostsHistoryLength: 10,
         features: {
-            registryAuth: false
+            registryAuth: true
         }
     });

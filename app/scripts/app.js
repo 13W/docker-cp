@@ -170,9 +170,12 @@ angular
                                 if (results[0].status !== 200) {
                                     return defer.reject(image);
                                 }
-                                image.info = results[1].data.find(function (image) {
+                                image.info = results[1].data.filter(function (image) {
                                     return image.Id.substr(0, 12) === imageId;
-                                }) || {};
+                                })[0] || {};
+                                image.info.RepoTags = (image.info.RepoTags || []).filter(function (tag) {
+                                    return tag !== '<none>:<none>';
+                                });
                                 image.history = results[2].data || [];
                                 defer.resolve(image);
                             },  defer.reject.bind(defer));

@@ -1,9 +1,10 @@
 'use strict';
 
 angular.module('dockerUiApp').controller('ImagesCtrl', [
-    '$scope', '$location', 'Docker',
-    function ($scope, $location, Docker) {
+    '$scope', '$location', '$filter', 'Docker',
+    function ($scope, $location, $filter, Docker) {
         $scope.images = [];
+        $scope.showUntagged = false;
         $scope.options = {all: false, tree: false};
 
         function createTree(images, container) {
@@ -32,10 +33,14 @@ angular.module('dockerUiApp').controller('ImagesCtrl', [
         $scope.reload = function () {
             Docker.images($scope.options, function (images) {
                 $scope.images.splice(0);
+
                 if ($scope.options.tree) {
                     $scope.images = createTree(images);
                 } else {
-                    $scope.images = images;
+                    $scope.images = $filter('filter')(images, function (image) {
+                        var tags = image.RepoTags || [];
+                        return $scope.showUntagged || tags[0] !== '<none>:<none>';
+                    });
                 }
             });
         };
@@ -55,19 +60,31 @@ angular.module('dockerUiApp').controller('ImagesCtrl', [
                     field: 'RepoTags',
                     link : '/image/{{ Id | shortTag }}',
                     map  : function (e) {
-                        return e[0].split(':')[0];
+                        var unique = {};
+                        return e
+                            .map(function (tag) {
+                                var parsed = Docker.parseTag(tag);
+                                return parsed.nameWithRegistry;
+                            }).filter(function (e) {
+                                var isUnique = !unique[e];
+                                unique[e] = true;
+                                return isUnique && !!e;
+                            }).join(', ');
                     }
                 },
                 {
                     name : 'Tags',
                     field: 'RepoTags',
                     map  : function (e) {
+                        var unique = {};
                         return e
                             .map(function (e) {
-                                return e.split(':')[1];
+                                return Docker.parseTag(e).tag;
                             })
                             .filter(function (e) {
-                                return !!e;
+                                var isUnique = !unique[e];
+                                unique[e] = true;
+                                return isUnique && !!e;
                             })
                             .join(', ');
                     }

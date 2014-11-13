@@ -12,42 +12,7 @@ angular.module('dockerUiApp').directive('dcGrid', [
     function ($compile, $parse, $rootScope, $filter) {
         //noinspection JSLint
         return {
-            template: '<div>\
-                <div class="row">\
-                    <div class="col-sm-2">\
-                        <pager total-items="totalItems" items-per-page="maxSize" page="currentPage" num-pages="numPages"></pager>\
-                    </div>\
-                    <div class="pager col-sm-1 center-block" style="padding-top: 6px;">\
-                        Page: {{ currentPage }} / {{ numPages }}\
-                    </div>\
-                </div>\
-                <table class="table table-hover">\
-                    <thead>\
-                        <tr>\
-                            <th data-ng-repeat="def in options.colDef" data-ng-click="sort(def.field)" style="cursor: pointer;">\
-                                <i data-ng-class=\'{"glyphicon-chevron-up": sortUp(def.field), "glyphicon-chevron-down": sortDown(def.field)}\' class="glyphicon"></i>{{ def.name }}\
-                            </th>\
-                        </tr>\
-                    </thead>\
-                    <tbody>\
-                        <tr data-ng-repeat-start="row in rows" \
-                            data-ng-class="rowClass(row)" \
-                            data-ng-click="subgrid(row)" \
-                            style="min-width: 50px;">\
-                            <td data-ng-repeat="def in options.colDef" \
-                                data-ng-append-html="get(row, def)" \
-                                data-ng-compile="def.compile" \
-                                style="{{def.style}}" \
-                                data-ng-class="def.class"></td>\
-                        </tr>\
-                        <tr data-ng-repeat-end data-ng-show="nested && row.Id === active" data-name="parent-{{ row.Id }}">\
-                            <td colspan="{{ options.colDef.length }}">\
-                                <span style="padding-left: 40px"></span>\
-                            </td>\
-                        </tr>\
-                    </tbody>\
-                </table>\
-            </div>',
+            templateUrl: 'views/dc-grid.html',
             restrict: 'E',
             replace: true,
             scope   : {

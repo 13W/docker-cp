@@ -27,6 +27,38 @@ angular.module('dockerUiApp').controller('ImageCtrl', [
             maxSize: 5
         };
 
+        $scope.onTagAdded = function onTagAdded(tag) {
+            if (!Docker.parseTag(tag.text).name) {
+                return false;
+            }
+            Docker.tagImage({Id: image.Id, repo: tag.text});
+        };
+        $scope.onTagRemoved = function onTagRemoved(tag) {
+            if (!Docker.parseTag(tag.text).name) {
+                return false;
+            }
+            Docker.deleteImage({Id: tag.text || image.Id}, function (messages) {
+                var lastMessage = messages.slice(-1)[0] || {};
+                if (lastMessage.Deleted === image.Id) {
+                    $location.path('/images');
+                }
+            });
+        };
+
+        $scope.pushImage = function () {
+            var tags = (image.info.RepoTags || []).map(function (tag) {
+                return tag.text || tag;
+            });
+            Docker.pushImage({
+                tags: tags,
+                progressHandler: function () {
+                    console.log(arguments);
+                }
+            }, function () {
+                console.log('Image pushed', arguments);
+            });
+        };
+
         $scope.$on('$routeChangeSuccess', function () {
             $routeSegment.chain.slice(-1)[0].reload();
         });

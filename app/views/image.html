@@ -5,6 +5,8 @@
 </h3>
 <button class="pull-right btn btn-danger btn-xs" data-ng-click="destroyImage()" style="width: 80px">
     <i class="glyphicon glyphicon-remove-circle"></i> Destroy</button>
+<button class="pull-right btn btn-success btn-xs" data-ng-click="pushImage()" style="width: 80px;margin-right: 2px;">
+    <i class="glyphicon glyphicon-cloud-upload"></i> Push</button>
 <!--
 <button type="button" class="pull-right btn btn-primary btn-xs" data-ng-click="push()" style="width: 80px;margin-right: 80px;">
     <i class="glyphicon glyphicon-upload"></i> Push</button>
@@ -39,6 +41,12 @@
                 <dt>Comment</dt>
                 <dd>{{ image.Comment }}</dd>
             </dl>
+        </td>
+        <td style="vertical-align: text-top;width: 20%;">Tags: <tags-input data-ng-model="image.info.RepoTags"
+                              placeholder="tag"
+                              data-on-tag-added="onTagAdded($tag)"
+                              data-on-tag-removed="onTagRemoved($tag)"
+            ></tags-input>
         </td>
     </tr>
 </table>

@@ -6,8 +6,8 @@ if (typeof setImmediate === 'undefined') {
 }
 
 angular.module('dockerUiApp').controller('ContainerCtrl', [
-    '$scope', '$routeSegment', '$timeout', '$location', 'Config', 'Docker', 'terminal', 'container',
-    function ($scope, $routeSegment, $timeout, $location, Config, Docker, tty, container) {
+    '$scope', '$routeSegment', '$timeout', '$location', 'urlParser', 'Config', 'Docker', 'terminal', 'container',
+    function ($scope, $routeSegment, $timeout, $location, urlParser, Config, Docker, tty, container) {
         $scope.active = true;
         $scope.container = container;
         $scope.containerId = container.Id.slice(0, 12);
@@ -18,6 +18,7 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
                 {name: 'Filename', field: 'Path'}
             ],
             rowClass: function (row) {
+                /** @namespace row.Kind */
                 return {
                     'warning': !!row.Kind
                 };
@@ -30,6 +31,8 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
 
         $scope.activeTab = {};
         $scope.processList = function (tab) {
+            /** @namespace $scope.container.State */
+            /** @namespace $scope.container.State.Running */
             if ($scope.containerId && $scope.container.State.Running) {
                 Docker.processList({Id: $scope.containerId, ps_args: 'axwuu'}, function (processList) {
                     $scope.processList = processList;
@@ -42,7 +45,7 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
         };
 
         $scope.logs = function () {
-            var logTerminalElement = angular.element('#logTerminal')[0];
+            var logTerminalElement = document.getElementById('logTerminal');
             if (!((logTerminalElement && $scope.containerId) || $scope.Console.logs.terminal) || $scope.Console.logs.terminal) {
                 return;
             }
@@ -118,15 +121,14 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
             if ($scope.containerId && $scope.Console.terminal) {
                 return;
             }
-            var parser = document.createElement('a'),
-                termContainer = angular.element('#terminal'),
+            var parsed = urlParser(Config.host),
+                termContainer = document.getElementById('terminal'),
                 url;
-            parser.href = Config.host;
-            url = (parser.protocol === 'https:' ? 'wss' : 'ws') + '://' + parser.host + '/containers/' +
+            url = (parsed.protocol === 'https:' ? 'wss' : 'ws') + '://' + parsed.host + '/containers/' +
                 $scope.containerId + '/attach/ws?logs=0&stream=1&stdout=1&stderr=1&stdin=1';
 
-            termContainer.html("");
-            $scope.Console.terminal = tty(termContainer[0], url);
+            termContainer.innerHTML = '';
+            $scope.Console.terminal = tty(termContainer, url);
         };
 
         $scope.openInNewWindow = function () {

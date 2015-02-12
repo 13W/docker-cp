@@ -42,11 +42,20 @@
                 <dd>{{ image.Comment }}</dd>
             </dl>
         </td>
-        <td style="vertical-align: text-top;width: 20%;">Tags: <tags-input data-ng-model="image.info.RepoTags"
-                              placeholder="tag"
-                              data-on-tag-added="onTagAdded($tag)"
-                              data-on-tag-removed="onTagRemoved($tag)"
-            ></tags-input>
+        <td style="vertical-align: text-top;width: 20%;">Tags:
+            <ui-select multiple tagging tagging-label="false" reset-search-input="true"
+                       ng-model="image.info.RepoTags" theme="bootstrap" reset-search-input="true"
+                       data-on-remove="onTagRemoved($item, $model)"
+                       data-on-select="onTagAdded($item, $model)"
+                >
+                <ui-select-match placeholder="tag...">{{$item}}</ui-select-match>
+                <ui-select-choices repeat="tag in image.info.RepoTags | filter:$select.search"
+                                   data-ng-click="$select.search=''">
+                    {{tag}}
+                </ui-select-choices>
+            </ui-select>
+
+        </tags-input>
         </td>
     </tr>
 </table>

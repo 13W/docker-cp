@@ -1,7 +1,13 @@
 <div>
     <div class="row">
         <div class="col-sm-2">
-            <pager total-items="totalItems" items-per-page="maxSize" page="currentPage" num-pages="numPages"></pager>
+            <pager data-ng-model="currentPage"
+                   total-items="totalItems"
+                   items-per-page="maxSize"
+                   num-pages="numPages"
+                   previous-text="« Previous"
+                   next-text="Next »"
+                ></pager>
         </div>
         <div class="pager col-sm-1 center-block" style="padding-top: 6px;">
             Page: {{ currentPage }} / {{ numPages }}
@@ -18,7 +24,6 @@
         <tbody>
         <tr data-ng-repeat-start="row in rows"
             data-ng-class="rowClass(row)"
-            data-ng-click="subgrid(row)"
             style="min-width: 50px;">
             <td data-ng-repeat="def in options.colDef"
                 data-ng-append-html="get(row, def)"

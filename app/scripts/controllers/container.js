@@ -1,13 +1,9 @@
 'use strict';
 
-//noinspection JSLint
-if (typeof setImmediate === 'undefined') {
-    var setImmediate = setTimeout;
-}
-
 angular.module('dockerUiApp').controller('ContainerCtrl', [
-    '$scope', '$routeSegment', '$timeout', '$location', 'urlParser', 'Config', 'Docker', 'terminal', 'container',
-    function ($scope, $routeSegment, $timeout, $location, urlParser, Config, Docker, tty, container) {
+    '$scope', '$routeSegment', '$timeout', '$location', 'urlParser',
+    'Config', 'Docker', 'Dialogs', 'terminal', 'container',
+    function ($scope, $routeSegment, $timeout, $location, urlParser, Config, Docker, Dialogs, tty, container) {
         $scope.active = true;
         $scope.container = container;
         $scope.containerId = container.Id.slice(0, 12);
@@ -25,8 +21,29 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
             },
             maxSize: 5
         };
+
         function reload() {
             $routeSegment.chain.slice(-1)[0].reload();
+        }
+
+        function getWindowSize(win) {
+            var w = win.window,
+                d = win.document,
+                e = d.documentElement,
+                g = d.getElementsByTagName('body')[0],
+                width = w.innerWidth || e.clientWidth || g.clientWidth,
+                height = w.innerHeight || e.clientHeight || g.clientHeight;
+
+            return {width: width, height: height};
+        }
+
+        function setWindowSize(win, width, height) {
+            var w = win.window,
+                d = win.document,
+                e = d.documentElement,
+                g = d.getElementsByTagName('body')[0];
+            w.innerWidth = e.clientWidth = g.clientWidth = width;
+            w.innerHeight = e.clientHeight = g.clientHeight = height;
         }
 
         $scope.activeTab = {};
@@ -34,8 +51,8 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
             /** @namespace $scope.container.State */
             /** @namespace $scope.container.State.Running */
             if ($scope.containerId && $scope.container.State.Running) {
-                Docker.processList({Id: $scope.containerId, ps_args: 'axwuu'}, function (processList) {
-                    $scope.processList = processList;
+                Docker.processList({Id: $scope.containerId, 'ps_args': 'axwuu'}, function (processes) {
+                    $scope.processes = processes;
                 });
             }
 
@@ -46,7 +63,8 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
 
         $scope.logs = function () {
             var logTerminalElement = document.getElementById('logTerminal');
-            if (!((logTerminalElement && $scope.containerId) || $scope.Console.logs.terminal) || $scope.Console.logs.terminal) {
+            if (!((logTerminalElement && $scope.containerId) ||
+                $scope.Console.logs.terminal) || $scope.Console.logs.terminal) {
                 return;
             }
             //noinspection JSLint
@@ -59,7 +77,12 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
             });
             terminal.open(logTerminalElement);
             //noinspection JSLint
-            var connection = $scope.Console.logs.connection = Docker.logs({ID: $scope.containerId, stdout:1, stderr: 1, tail: 100}, function (data) {
+            var connection = $scope.Console.logs.connection = Docker.logs({
+                ID: $scope.containerId,
+                stdout: 1,
+                stderr: 1,
+                tail: 100
+            }, function (data) {
                 if (logTerminalElement) {
                     data.split('\n').forEach(function (data) {
                         terminal.write(data + '\r\n');
@@ -106,6 +129,12 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
             }
         };
 
+        $scope.clone = function () {
+            var config = angular.extend({}, $scope.container.Config, {HostConfig: $scope.container.HostConfig});
+            delete config.Id;
+            Dialogs.createContainer(config);
+        };
+
         $scope.commit = function () {
             if ($scope.containerId) {
                 Docker.commit($scope.container).then(function (image) {
@@ -115,7 +144,6 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
                 });
             }
         };
-
 
         $scope.attachConsole = function () {
             if ($scope.containerId && $scope.Console.terminal) {
@@ -145,6 +173,21 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
             terminal = tty(win.document.body, $scope.Console.terminal.address);
             win.onbeforeunload = function () {
                 terminal.destroy();
+            };
+
+            var currentSize = getWindowSize(win);
+
+            win.window.onresize = function () {
+                var size = getWindowSize(win),
+                    x = Math.floor(size.width / 6.70),
+                    y = Math.floor(size.height / 13.05);
+                Docker.resize({Id: $scope.container.Id, h: y, w: x}).then(function () {
+                    currentSize = size;
+                    terminal.tty.resize(x, y);
+                }, function () {
+                    setWindowSize(win, currentSize.width, currentSize.height);
+                    console.log(arguments);
+                });
             };
         };
 

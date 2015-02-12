@@ -41,11 +41,16 @@ angular.module('dockerUiApp').config([
             $rootScope.search = $scope.search = {value: ''};
             $rootScope.alert = $scope.alert = {value: null};
             $scope.currentLocation = $location.$$path.split('/').slice(0, 2).join('/');
-            $scope.docker_host = $rootScope.docker_host || Config.host;
+            $scope.dockerHost = $rootScope.dockerHost || Config.host;
 
-            $rootScope.$watch('docker_host', function (docker_host) {
-                if (docker_host !== $scope.docker_host) {
-                    $scope.docker_host = $rootScope.docker_host || Config.host;
+            $scope.input = {
+                Image: ''
+            };
+            $scope.images = [{RepoTags: ['hello']}, {RepoTags: ['world']}, {RepoTags: ['pipec']}];
+
+            $rootScope.$watch('dockerHost', function (dockerHost) {
+                if (dockerHost !== $scope.dockerHost) {
+                    $scope.dockerHost = $rootScope.dockerHost || Config.host;
                 }
             });
 

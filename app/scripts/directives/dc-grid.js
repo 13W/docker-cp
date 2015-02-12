@@ -28,14 +28,15 @@ angular.module('dockerUiApp').directive('dcGrid', [
 
                 var filtered = [],
                     progress = false;
+
                 function init(rows) {
                     if (!rows.length) {
                         scope.rows = [];
                         return;
                     }
                     scope.totalItems = rows.length;
-                    if (scope.sortBy && scope.sortType) {
-                        rows = $filter('orderBy')(rows, scope.sortBy, scope.sortType);
+                    if (scope.sortBy && angular.isDefined(scope.sortOrder)) {
+                        rows = $filter('orderBy')(rows, scope.sortBy, scope.sortOrder);
                     }
                     scope.rows = rows.slice((scope.currentPage - 1) * scope.maxSize, scope.currentPage * scope.maxSize);
                     progress = false;
@@ -53,16 +54,16 @@ angular.module('dockerUiApp').directive('dcGrid', [
                     init(filtered);
                 });
                 scope.sortBy = scope.options.sortBy;
-                scope.sortType = !!scope.options.sortBy;
+                scope.sortOrder = !!scope.options.sortBy;
                 scope.sort = function (field) {
                     if (scope.sortBy !== field) {
                         scope.sortBy = field;
-                        scope.sortType = true;
+                        scope.sortOrder = true;
                     } else {
-                        if (scope.sortType) {
-                            scope.sortType = false;
+                        if (scope.sortOrder) {
+                            scope.sortOrder = false;
                         } else {
-                            scope.sortType = null;
+                            scope.sortOrder = null;
                             scope.sortBy = null;
                         }
                     }
@@ -70,11 +71,11 @@ angular.module('dockerUiApp').directive('dcGrid', [
                 };
 
                 scope.sortUp = function (field) {
-                    return scope.sortBy === field && scope.sortType === true;
+                    return scope.sortBy === field && scope.sortOrder === true;
                 };
 
                 scope.sortDown = function (field) {
-                    return scope.sortBy === field && scope.sortType === false;
+                    return scope.sortBy === field && scope.sortOrder === false;
                 };
 
                 if (scope.options.globalFilter) {
@@ -94,25 +95,6 @@ angular.module('dockerUiApp').directive('dcGrid', [
                     return '';
                 };
 
-                scope.subgrid = function (row) {
-                    if (!scope.nested) {
-                        return;
-                    }
-                    /** @namespace row.Id */
-                    if (!(row.children && row.children.length) || scope.active === row.Id) {
-                        scope.active = null;
-                        return;
-                    }
-
-                    scope.active = row.Id;
-                    var newScope = scope.$new();
-                    newScope.options = scope.options;
-                    newScope.items = row.children;
-                    angular.element('[data-name=parent-' + row.Id + '] span')
-                        .html("")
-                        .append($compile('<dc-grid data-options="options" data-items="items"></dc-grid>')(newScope));
-                };
-
                 scope.get = function (data, def) {
                     var getter = $parse(def.field),
                         value = getter(scope, data),
@@ -125,7 +107,8 @@ angular.module('dockerUiApp').directive('dcGrid', [
                     if (Array.isArray(def.buttons)) {
                         el = '';
                         def.buttons.forEach(function (button, i) {
-                            el += '<button class="btn ' + button.class + '" data-ng-click="def.buttons[' + i + '].click(row)">' + button.name + '</button>';
+                            el += '<button class="btn ' + button.class +
+                            '" data-ng-click="def.buttons[' + i + '].click(row)">' + button.name + '</button>';
                         });
                         return el;
                     }

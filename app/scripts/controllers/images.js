@@ -7,41 +7,12 @@ angular.module('dockerUiApp').controller('ImagesCtrl', [
         $scope.showUntagged = false;
         $scope.options = {all: false, tree: false};
 
-        function createTree(images, container) {
-            var ids = {},
-                parents = container || [],
-                pids = {};
-            images.forEach(function (image) {
-                ids[image.Id] = image;
-                pids[image.Id] = pids[image.Id] || [];
-                image.children = pids[image.Id];
-                /** @namespace image.ParentId */
-                if (!image.ParentId) {
-                    parents.push(image);
-                } else {
-                    if (pids[image.ParentId]) {
-                        pids[image.ParentId].push(image);
-                    } else {
-                        pids[image.ParentId] = [image];
-                    }
-                }
-            });
-
-            return parents;
-        }
-
         $scope.reload = function () {
             Docker.images($scope.options, function (images) {
-                $scope.images.splice(0);
-
-                if ($scope.options.tree) {
-                    $scope.images = createTree(images);
-                } else {
-                    $scope.images = $filter('filter')(images, function (image) {
-                        var tags = image.RepoTags || [];
-                        return $scope.showUntagged || tags[0] !== '<none>:<none>';
-                    });
-                }
+                $scope.images = $filter('filter')(images, function (image) {
+                    var tags = image.RepoTags || [];
+                    return $scope.showUntagged || tags[0] !== '<none>:<none>';
+                });
             });
         };
 

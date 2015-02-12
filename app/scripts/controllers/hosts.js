@@ -42,7 +42,7 @@ angular.module('dockerUiApp').controller('HostsCtrl', [
                 {name: 'Created', field: 'created', filter: {name: 'date', options: 'mediumDate'}},
                 {name     : 'Actions', buttons: [
                     {
-                        name : '<i class="glyphicon glyphicon-open"></i> Connect',
+                        name : '<i class="glyphicon glyphicon-log-in"></i> Connect',
                         class: 'btn btn-xs btn-primary',
                         click: function (row) {
                             $scope.connect(row.url);
@@ -52,5 +52,4 @@ angular.module('dockerUiApp').controller('HostsCtrl', [
             ],
             globalFilter: true
         };
-
     }]);

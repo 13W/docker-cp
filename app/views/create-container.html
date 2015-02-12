@@ -1,114 +1,429 @@
+<style>
+    .common-form .form-control {
+        width: 100% !important;
+    }
+    .common-form legend {
+        text-align: left;
+    }
+    .form-group {
+         margin-bottom: 5px;
+    }
+    .form-group textarea {
+        height: 35px;
+    }
+    .carousel-control, .carousel-indicators {
+        display: none;
+    }
+    .ui-select-container {
+        text-align: left;
+    }
+    .ui-select-match-item {
+        text-overflow: ellipsis;
+        overflow: hidden;
+        max-width: 100%;
+    }
+    .checkbox {
+        text-align: start;
+    }
+    .left-labels label {
+        text-align: left !important;
+    }
+    .checkbox-label {
+        display: block;
+        width: 100%;
+        height: 34px;
+        padding: 6px 12px;
+        font-size: 14px;
+        line-height: 1.42857143;
+    }
+</style>
 <div class="modal-header">
     <h3>Create container</h3>
 </div>
 <div class="modal-body">
-    <form class="form-horizontal" role="form">
-        <tabset>
-            <tab heading="Basic">
-                <div class="form-group"><label for="Name" class="col-sm-3 control-label">Name</label>
-                    <div class="col-sm-9"><input type="text" class="form-control" id="Name" placeholder="Container Name"
-                                                  data-ng-model="input.name">
+    <form class="form-horizontal common-form" role="form" style="width: 100%">
+        <carousel no-transition>
+            <slide>
+                <fieldset style="width: 100%;height: 400px;">
+                    <legend>Common</legend>
+                    <div class="form-group" style="width: 100%">
+                        <label for="Name" class="control-label col-sm-3 col-xs-3 col-md-3">Name</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <input type="text" id="Name" class="form-control" data-ng-model="input.name"/>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group"><label class="col-sm-3 control-label">Image</label>
-                    <div class="col-sm-9">
-<!--
-                        <ui-select ng-model="input.Image" theme="bootstrap" reset-search-input="false" style="width: 300px;">
-                            <ui-select-match placeholder="Enter image name...">{{$select.selected.name}}</ui-select-match>
-                            <ui-select-choices repeat="img in images track by $index | filter: $select.search"
-                                               refresh="getImages($select.search)">
-                                <span ng-bind-html="img | highlight: $select.search"></span>
-                            </ui-select-choices>
-                        </ui-select>
--->
-                        <ui-select data-ng-model="input.Image" theme="bootstrap" reset-search-input="false">
-                            <ui-select-match placeholder="Enter image name...">{{$select.selected}}</ui-select-match>
-                            <ui-select-choices repeat="img in images track by $index | filter: $select.search"
-                                    refresh="getImages($select.search)">
-                                <span data-ng-bind-html="img | highlight: $select.search"></span>
-                                <!--<small data-ng-bind-html="tag.layer | highlight: $select.search"></small>-->
-                            </ui-select-choices>
-                        </ui-select>
+                    <div class="form-group" style="width: 100%">
+                        <label class="control-label col-sm-3 col-xs-3 col-md-3">Image</label>
+                        <div class="col-sm-7 col-xs-7 col-md-7" style="padding-right: 1px;">
+                            <ui-select ng-model="input.Image" theme="bootstrap">
+                                <ui-select-match
+                                    placeholder="Enter image name...">{{$select.selected.RepoTags[0]}}</ui-select-match>
+                                <ui-select-choices repeat="img.RepoTags as img in images | filter: $select.search">
+                                    <div ng-bind-html="img.RepoTags[0] | highlight: $select.search"></div>
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                        <div class="col-sm-2 col-xs-2 col-md-2" style="padding-left: 1px;">
+                            <button class="btn" style="padding: 6px 0;width: 100%"
+                                    data-ng-click="loadConfig()" data-ng-disabled="!input.Image">Preload</button>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group"><label class="col-sm-3 control-label">Env Variables</label>
-                    <div class="col-sm-9">
-                        <tags-input data-ng-model="input.Env" placeholder="KEY=value"></tags-input>
+                    <div class="form-group" style="width: 100%">
+                        <label class="control-label col-sm-3 col-xs-3 col-md-3">Restart Policy</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9"
+                             data-ng-class="{'col-sm-7 col-xs-7 col-md-7': input.HostConfig.RestartPolicy.Name == 'on-failure'}">
+                            <ui-select ng-model="input.HostConfig.RestartPolicy.Name"
+                                       theme="bootstrap" data-search-enabled="false">
+                                <ui-select-match placeholder="Select Restart Policy...">
+                                    {{$select.selected}}</ui-select-match>
+                                <ui-select-choices repeat="rp as rp in restartPolicies | filter: $select.search">
+                                    <div ng-bind-html="rp | highlight: $select.search"></div>
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                        <div data-ng-show="input.HostConfig.RestartPolicy.Name == 'on-failure'"
+                             class="col-sm-2 col-xs-2 col-md-2">
+                            <input type="number" class="form-control"
+                                   data-ng-model="input.HostConfig.RestartPolicy.MaximumRetryCount"/>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group"><label for="Entrypoint" class="col-sm-3 control-label">Entry Point</label>
-                    <div class="col-sm-9"><input type="text" class="form-control" id="Entrypoint" placeholder="Entry Point" data-ng-model="input.Entrypoint">
+                    <div class="form-group" style="width: 100%">
+                        <label for="Links" class="control-label col-sm-3 col-xs-3 col-md-3">Links</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <ui-select id="Links" multiple tagging ng-model="input.HostConfig.Links"
+                                       theme="bootstrap" reset-search-input="true" tagging-label="false"
+                                >
+                                <ui-select-match placeholder="<name|id>:alias">{{$item}}</ui-select-match>
+                                <ui-select-choices repeat="links in input.HostConfig.Links | filter:$select.search">
+                                    {{links}}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group"><label for="Cmd" class="col-sm-3 control-label">Command</label>
-                    <div class="col-sm-9"><input type="text" class="form-control" id="Cmd" placeholder="Cmd" data-ng-model="input.Cmd">
+                    <div class="form-group" style="width: 100%">
+                        <label for="WorkingDir" class="control-label col-sm-3 col-xs-3 col-md-3">Work Dir</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <input type="text" id="WorkingDir" class="form-control" data-ng-model="input.WorkingDir"/>
+                        </div>
                     </div>
-                </div>
-            </tab>
-            <tab heading="Network">
-                <div class="form-group"><label for="Hostname" class="col-sm-3 control-label">Hostname</label>
-                    <div class="col-sm-9"><input type="text" class="form-control" id="Hostname" placeholder="Hostname"
-                                                  data-ng-model="input.Hostname">
+                    <div class="form-group" style="width: 100%">
+                        <label for="Entrypoint" class="control-label col-sm-3 col-xs-3 col-md-3">Entrypoint</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <input type="text" id="Entrypoint" class="form-control" data-ng-model="input.Entrypoint"/>
+                        </div>
                     </div>
-                </div>
-                <!--<div class="form-group"><label class="col-sm-3 control-label">PortSpecs</label>-->
-                    <!--<div class="col-sm-9">-->
-                        <!--<tags-input data-ng-model="input.PortSpecs"></tags-input>-->
-                    <!--</div>-->
-                <!--</div>-->
-                <div class="form-group"><label class="col-sm-3 control-label">Exposed Ports</label>
-                    <div class="col-sm-9">
-                        <tags-input data-ng-model="input.ExposedPorts"  placeholder="ip:hostPort:containerPort"></tags-input>
+                    <div class="form-group" style="width: 100%">
+                        <label for="Cmd" class="control-label col-sm-3 col-xs-3 col-md-3">Cmd</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <textarea type="text" id="Cmd" class="form-control" data-ng-model="input.Cmd"></textarea>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group"><label class="col-sm-3 control-label">Dns</label>
-                    <div class="col-sm-9">
-                        <tags-input data-ng-model="input.Dns" placeholder="XX.XX.XX.XX"></tags-input>
+                    <div class="form-group" style="width: 100%">
+                        <label for="Env" class="control-label col-sm-3 col-xs-3 col-md-3">Envirement Variables</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <ui-select id="Env" multiple tagging tagging-label="false"
+                                       ng-model="input.Env" theme="bootstrap" reset-search-input="true">
+                                <ui-select-match placeholder="KEY=value">{{$item}}</ui-select-match>
+                                <ui-select-choices repeat="env in input.Env | filter:$select.search"
+                                                   data-ng-click="$select.search=''">
+                                    {{env}}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
                     </div>
-                </div>
-            </tab>
-            <tab heading="Advanced">
-                <div class="form-group"><label for="Memory" class="col-sm-3 control-label">Memory</label>
-
-                    <div class="col-sm-9"><input type="text" class="form-control" id="Memory" placeholder="Memory"
-                                                  data-ng-model="input.Memory">
+                </fieldset>
+            </slide>
+            <slide>
+                <fieldset style="width: 100%;height: 400px;" data-ng-disabled="input.NetworkDisabled">
+                    <legend>Network Settings <i class="glyphicon glyphicon-check"
+                                               data-ng-class="{'glyphicon-unchecked': input.NetworkDisabled, 'glyphicon-check': !input.NetworkDisabled}"
+                                               data-ng-click="input.NetworkDisabled = !input.NetworkDisabled"
+                        ></i>
+                    </legend>
+                    <div class="form-group" style="width: 100%">
+                        <label class="control-label col-sm-3 col-xs-3 col-md-3">Network Type</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9"
+                             data-ng-class="{'col-sm-4 col-xs-4 col-md-4': input.HostConfig.NetworkMode == 'container'}">
+                            <ui-select ng-model="input.HostConfig.NetworkMode" theme="bootstrap" search-enabled="false">
+                                <ui-select-match placeholder="Enter Network Type...">
+                                    {{$select.selected}}</ui-select-match>
+                                <ui-select-choices repeat="net as net in networkTypes | filter: $select.search"
+                                                   ui-disable-choice="!containers.length">
+                                    <div ng-bind-html="net | highlight: $select.search"></div>
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                        <div data-ng-show="input.HostConfig.NetworkMode == 'container'"
+                             class="col-sm-5 col-xs-5 col-md-5">
+                            <ui-select ng-model="input.NetContainer" theme="bootstrap"
+                                       search-enabled="'false'" data-disabled="!containers.length">
+                                <ui-select-match placeholder="Select container">
+                                    {{$select.selected.Names.join(', ')}}</ui-select-match>
+                                <ui-select-choices repeat="container.Names[0].substr(1) as container in containers | filter: $select.search"
+                                                   refresh-delay="0">
+                                    <div ng-bind-html="container.Names[0].substr(1) | highlight: $select.search"></div>
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group"><label for="MemorySwap" class="col-sm-3 control-label">Swap</label>
-                    <div class="col-sm-9"><input type="text" class="form-control" id="MemorySwap" placeholder="MemorySwap"
-                                                  data-ng-model="input.MemorySwap">
+                    <div class="form-group" style="width: 100%" data-ng-disabled="['container', 'host'].indexOf(input.HostConfig.NetworkMode) != -1">
+                        <label for="MacAddress" class="control-label col-sm-3 col-xs-3 col-md-3">MAC Address</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <input type="text" id="MacAddress" class="form-control" data-ng-model="input.MacAddress"/>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group"><label for="User" class="col-sm-3 control-label">User</label>
-
-                    <div class="col-sm-9"><input type="text" class="form-control" id="User" placeholder="User"
-                                                  data-ng-model="input.User">
+                    <div class="form-group" style="width: 100%">
+                        <label for="Dns" class="control-label col-sm-3 col-xs-3 col-md-3">Servers</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <ui-select id="Dns" multiple tagging tagging-label="false" reset-search-input="true"
+                                       ng-model="input.HostConfig.Dns" theme="bootstrap">
+                                <ui-select-match placeholder="ip.add.re.ss">{{$item}}</ui-select-match>
+                                <ui-select-choices repeat="dns in input.HostConfig.Dns | filter:$select.search">
+                                    {{dns}}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group"><label for="WorkingDir" class="col-sm-3 control-label">Working Dir</label>
-                    <div class="col-sm-9"><input type="text" class="form-control" id="WorkingDir" placeholder="WorkingDir"
-                                                  data-ng-model="input.WorkingDir">
+                    <div class="form-group" style="width: 100%">
+                        <label for="Hostname" class="control-label col-sm-3 col-xs-3 col-md-3">Hostname</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <input type="text" id="Hostname" class="form-control" data-ng-model="input.Hostname"/>
+                        </div>
                     </div>
-                </div>
-            </tab>
-            <tab heading="Volumes">
-                <div class="form-group"><label class="col-sm-3 control-label">Volumes</label>
-                    <div class="col-sm-9">
-                        <tags-input data-ng-model="input.Volumes" placeholder="/path/from/:/path/to:rw"></tags-input>
+                    <div class="form-group" style="width: 100%">
+                        <label for="Domain" class="control-label col-sm-3 col-xs-3 col-md-3">Domain</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <input type="text" id="Domain" class="form-control" data-ng-model="input.Domainname"/>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group"><label for="VolumesFrom" class="col-sm-3 control-label">Volumes From</label>
-                    <div class="col-sm-9">
-                        <input type="text" class="form-control" id="VolumesFrom" placeholder="Volumes From"
-                               data-ng-model="input.VolumesFrom"
-                               typeahead="img for img in getContainer($viewValue) | filter:$viewValue">
+                    <div class="form-group" style="width: 100%">
+                        <label for="DnsSearch" class="control-label col-sm-3 col-xs-3 col-md-3">DNS Search</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <input type="text" id="DnsSearch" class="form-control" data-ng-model="input.HostConfig.DnsSearch"/>
+                        </div>
                     </div>
-                </div>
-            </tab>
-        </tabset>
+                    <div class="checkbox col-sm-12 col-xs-12 col-md-12 form-group left-labels">
+                        <label class="control-label checkbox-label" style="font-weight: bold;border: 0;"
+                               ng-click="input.HostConfig.PublishAllPorts=!input.HostConfig.PublishAllPorts">
+                            Publish All Ports&nbsp;&nbsp;&nbsp;<i class="glyphicon glyphicon-check"
+                                          data-ng-class="{'glyphicon-unchecked': !input.HostConfig.PublishAllPorts, 'glyphicon-check': input.HostConfig.PublishAllPorts}"></i>
+                        </label>
+                    </div>
+                    <div class="form-group" style="width: 100%">
+                        <label for="ExposedPorts" class="control-label col-sm-3 col-xs-3 col-md-3">Exposed Ports</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <ui-select id="ExposedPorts" multiple tagging tagging-label="false" data-ng-disabled="input.HostConfig.PublishAllPorts"
+                                       ng-model="tmp.ExposedPorts" theme="bootstrap" reset-search-input="true"
+                                       data-on-select="addExposedPort($item, $model)"
+                                       data-on-remove="removeExposedPort($item, $model)"
+                                >
+                                <ui-select-match placeholder="ip:hostPort:containerPort">{{$item}}</ui-select-match>
+                                <ui-select-choices repeat="port in tmp.ExposedPorts | filter:$select.search"
+                                                   data-ng-click="$select.search=''">
+                                    {{port}}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="width: 100%">
+                        <label for="ExtraHosts" class="control-label col-sm-3 col-xs-3 col-md-3">Extra Hosts</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <ui-select id="ExtraHosts" multiple tagging tagging-label="false" reset-search-input="true"
+                                       ng-model="input.HostConfig.ExtraHosts" theme="bootstrap">
+                                <ui-select-match placeholder="host:ip.add.re.ss">{{$item}}</ui-select-match>
+                                <ui-select-choices repeat="item in input.HostConfig.ExtraHosts | filter:$select.search">
+                                    {{item}}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                    </div>
+                </fieldset>
+            </slide>
+            <slide>
+                <fieldset style="width: 100%;height: 400px;">
+                    <legend>Additional Settings</legend>
+                    <div class="form-group" style="width: 100%">
+                        <label for="Memory" class="control-label col-sm-3 col-xs-3 col-md-3">RAM</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <input type="text" id="Memory" class="form-control" data-ng-model="input.Memory"/>
+                        </div>
+                    </div>
+                    <div class="form-group" style="width: 100%">
+                        <label for="MemorySwap" class="control-label col-sm-3 col-xs-3 col-md-3">SWAP</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <input type="text" id="MemorySwap" class="form-control" data-ng-model="input.MemorySwap"/>
+                        </div>
+                    </div>
+                    <div class="form-group" style="width: 100%">
+                        <label for="CpuShares" class="control-label col-sm-3 col-xs-3 col-md-3">CPU Shares</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <input type="text" id="CpuShares" class="form-control" data-ng-model="input.CpuShares"/>
+                        </div>
+                    </div>
+                    <div class="form-group" style="width: 100%">
+                        <label for="CpuSet" class="control-label col-sm-3 col-xs-3 col-md-3">CPU Set</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <input type="text" id="CpuSet" class="form-control" data-ng-model="input.CpuSet"/>
+                        </div>
+                    </div>
+                    <div class="form-group" style="width: 100%">
+                        <label for="User" class="control-label col-sm-3 col-xs-3 col-md-3">User</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <input type="text" id="User" class="form-control" data-ng-model="input.User"/>
+                        </div>
+                    </div>
+                    <div class="checkbox col-sm-12 col-xs-12 col-md-12 form-group left-labels">
+                        <label class="control-label checkbox-label"
+                               ng-click="input.HostConfig.Privileged=!input.HostConfig.Privileged">
+                            Privileged <i class="glyphicon glyphicon-check"
+                                          data-ng-class="{'glyphicon-unchecked': !input.HostConfig.Privileged, 'glyphicon-check': input.HostConfig.Privileged}"></i>
+                        </label>
+                    </div>
+                    <div class="checkbox col-sm-12 col-xs-12 col-md-12 form-group left-labels">
+                        <label class="control-label col-sm-3 col-xs-3 col-md-3 col-sm-offset-1 col-xs-offset-1 col-md-offset-1"
+                               data-ng-click="input.Tty=!input.Tty">
+                            <i class="glyphicon glyphicon-check"
+                               data-ng-class="{'glyphicon-unchecked': !input.Tty, 'glyphicon-check': input.Tty}"></i> Tty
+                        </label>
+                        <label class="control-label col-sm-4 col-xs-4 col-md-4"
+                               data-ng-click="input.OpenStdin=!input.OpenStdin">
+                            <i class="glyphicon glyphicon-check"
+                               data-ng-class="{'glyphicon-unchecked': !input.OpenStdin, 'glyphicon-check': input.OpenStdin}"></i> Open Stdin
+                        </label>
+                        <label class="control-label col-sm-4 col-xs-4 col-md-4"
+                               data-ng-click="input.StdinOnce=!input.StdinOnce">
+                            <i class="glyphicon glyphicon-check"
+                               data-ng-class="{'glyphicon-unchecked': !input.StdinOnce, 'glyphicon-check': input.StdinOnce}"></i> Stdin Once
+                        </label>
+                    </div>
+                    <div class="checkbox col-sm-12 col-xs-12 col-md-12 form-group left-labels">
+                        <label class="control-label col-sm-3 col-xs-3 col-md-3 col-sm-offset-1 col-xs-offset-1 col-md-offset-1"
+                               data-ng-click="input.AttachStdin=!input.AttachStdin">
+                            <i class="glyphicon glyphicon-check"
+                               data-ng-class="{'glyphicon-unchecked': !input.AttachStdin, 'glyphicon-check': input.AttachStdin}"></i> Attach Stdin
+                        </label>
+                        <label class="control-label col-sm-4 col-xs-4 col-md-4"
+                               data-ng-click="input.AttachStdout=!input.AttachStdout">
+                            <i class="glyphicon glyphicon-check"
+                               data-ng-class="{'glyphicon-unchecked': !input.AttachStdout, 'glyphicon-check': input.AttachStdout}"></i> Attach Stdout
+                        </label>
+                        <label class="control-label col-sm-4 col-xs-4 col-md-4"
+                               data-ng-click="input.AttachStderr=!input.AttachStderr">
+                            <i class="glyphicon glyphicon-check"
+                               data-ng-class="{'glyphicon-unchecked': !input.AttachStderr, 'glyphicon-check': input.AttachStderr}"></i> Attach Stderr
+                        </label>
+                    </div>
+                </fieldset>
+            </slide>
+            <slide>
+                <fieldset style="width: 100%;height: 400px;">
+                    <legend>Security</legend>
+                    <div class="form-group" style="width: 100%">
+                        <label for="CapAdd" class="control-label col-sm-3 col-xs-3 col-md-3">Cap Add</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <ui-select id="CapAdd" multiple tagging tagging-label="false"
+                                       ng-model="input.HostConfig.CapAdd" theme="bootstrap" reset-search-input="true">
+                                <ui-select-match placeholder="NET_ADMIN">{{$item}}</ui-select-match>
+                                <ui-select-choices repeat="cap in input.HostConfig.CapAdd | filter:$select.search"
+                                                   data-ng-click="$select.search=''">
+                                    {{cap}}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="width: 100%">
+                        <label for="CapDrop" class="control-label col-sm-3 col-xs-3 col-md-3">Cap Drop</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <ui-select id="CapDrop" multiple tagging tagging-label="false"
+                                       ng-model="input.HostConfig.CapDrop" theme="bootstrap" reset-search-input="true">
+                                <ui-select-match placeholder="MKNOD">{{$item}}</ui-select-match>
+                                <ui-select-choices repeat="cap in input.HostConfig.CapDrop | filter:$select.search"
+                                                   data-ng-click="$select.search=''">
+                                    {{cap}}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="width: 100%">
+                        <label for="Volumes" class="control-label col-sm-3 col-xs-3 col-md-3">Volumes</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <ui-select id="Volumes" multiple tagging tagging-label="false"
+                                       ng-model="input.HostConfig.Binds" theme="bootstrap" reset-search-input="true"
+                                       data-on-select="addVolume($item, $model)"
+                                       data-on-remove="removeVolume($item, $model)"
+                                >
+                                <ui-select-match placeholder="host_path:container_path:ro">{{$item}}</ui-select-match>
+                                <ui-select-choices repeat="volume in input.HostConfig.Binds | filter:$select.search"
+                                                   data-ng-click="$select.search=''">
+                                    {{volume}}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="width: 100%">
+                        <label for="VolumesFrom" class="control-label col-sm-3 col-xs-3 col-md-3">Volumes From</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <ui-select id="VolumesFrom" multiple tagging ng-model="input.HostConfig.VolumesFrom"
+                                       theme="bootstrap" reset-search-input="true" tagging-label="false">
+                                <ui-select-match placeholder="container:ro|rw">{{$item}}</ui-select-match>
+                                <ui-select-choices repeat="volumes in input.HostConfig.VolumesFrom | filter:$select.search">
+                                    {{volumes}}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="width: 100%">
+                        <label for="Devices" class="control-label col-sm-3 col-xs-3 col-md-3">Devices</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <ui-select id="Devices" multiple tagging tagging-label="false"
+                                       ng-model="tmp.Devices" theme="bootstrap" reset-search-input="true"
+                                       data-on-select="addDevice($item, $model)"
+                                       data-on-remove="removeDevice($item, $model)"
+                                >
+                                <ui-select-match placeholder="/dev/deviceName:/dev/deviceName:mrw">{{$item}}</ui-select-match>
+                                <ui-select-choices repeat="device in tmp.Devices | filter:$select.search"
+                                                   data-ng-click="$select.search=''">
+                                    {{device}}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="width: 100%">
+                        <label for="SecurityOpts" class="control-label col-sm-3 col-xs-3 col-md-3">Security Opts</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <ui-select id="SecurityOpts" multiple tagging ng-model="input.SecurityOpts"
+                                       theme="bootstrap" reset-search-input="true" tagging-label="false">
+                                <ui-select-match placeholder="SecurityOpts">{{$item}}</ui-select-match>
+                                <ui-select-choices repeat="secOpts in input.SecurityOpts | filter:$select.search">
+                                    {{secOpts}}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="width: 100%">
+                        <label for="LxcConf" class="control-label col-sm-3 col-xs-3 col-md-3">Lxc Conf</label>
+                        <div class="col-sm-9 col-xs-9 col-md-9">
+                            <ui-select id="LxcConf" multiple tagging ng-model="tmp.LxcConf"
+                                       theme="bootstrap" reset-search-input="true" tagging-label="false"
+                                       data-on-select="addLxcConf($item, $model)"
+                                       data-on-remove="removeLxcConf($item, $model)"
+                                >
+                                <ui-select-match placeholder="options:value">{{$item}}</ui-select-match>
+                                <ui-select-choices repeat="secOpts in tmp.LxcConf | filter:$select.search">
+                                    {{secOpts}}
+                                </ui-select-choices>
+                            </ui-select>
+                        </div>
+                    </div>
+                    {{input.HostConfig | json}}
+                </fieldset>
+            </slide>
+        </carousel>
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn btn-success" data-ng-click="ok()">Create Container</button>
-    <button class="btn btn-warning" data-ng-click="close()">Cancel</button>
+    <button class="btn" data-ng-click="$$childHead.$$nextSibling.prev()">Prev</button>
+    <button class="btn" data-ng-click="$$childHead.$$nextSibling.next()">Next</button>
+    <button class="btn" data-ng-click="cancel()">Cancel</button>
+    <button class="btn btn-primary" data-ng-click="ok()">Create</button>
 </div>

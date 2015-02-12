@@ -19,7 +19,6 @@ var XHR = window.XMLHttpRequest || function () {
     throw new Error('This browser does not support XMLHttpRequest.');
 };
 
-
 angular.module('dockerUiApp').factory('stream', [
     '$q', '$timeout', '$rootScope', 'Config',
     function ($q, $timeout, $rootScope, Config) {
@@ -52,8 +51,7 @@ angular.module('dockerUiApp').factory('stream', [
                         return (indexOf >= 0) ? (indexOf + (startpos || 0)) : indexOf;
                     }
 
-                    //noinspection JSLint
-                    while (!!~(index = regexIndexOf(xhr.response, /}\s*\{/, nextLine))) {
+                    while ((index = regexIndexOf(xhr.response, /}\s*\{/, nextLine)) !== -1) {
                         part = xhr.response.slice(nextLine, index + 1);
 
                         json = parse(part);
@@ -78,7 +76,6 @@ angular.module('dockerUiApp').factory('stream', [
                 }
 
                 function doProgress() {
-                    console.log('onProgress', xhr.readyState, xhr.status, progress);
                     //readyState: headers received 2, body received 3, done 4
                     if (progress.completed === progress.current) {
                         return;
@@ -105,7 +102,6 @@ angular.module('dockerUiApp').factory('stream', [
                 }
 
                 xhr.onreadystatechange = function () {
-                    console.log('onReadyStateChange', xhr.readyState, xhr.status, progress);
                     status = xhr.status;
                     var responseHeaders = null,
                         response = null;
@@ -175,7 +171,11 @@ angular.module('dockerUiApp').factory('stream', [
                 defer.promise.ended = function () {
                     return xhr.readyState === 4;
                 };
-
+                defer.promise.write = function (data) {
+                    if (xhr.status < 4) {
+                        xhr.send(data);
+                    }
+                };
                 return defer.promise;
             }
         };

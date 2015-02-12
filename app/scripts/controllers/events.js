@@ -15,8 +15,8 @@ angular.module('dockerUiApp').controller('EventsCtrl', [
             date.setUTCHours(0);
             date.setUTCMinutes(0);
             date.setUTCSeconds(0);
-            //noinspection JSLint
-            $scope.stream = Docker.events('since=' + (date.getTime() / 1000 >>> 0), function (events) {
+
+            $scope.stream = Docker.events('since=' + ((date.getTime() / 1000) | 0), function (events) {
                 events.forEach(function (event) {
                     $scope.events.unshift(event);
                 });
@@ -37,7 +37,14 @@ angular.module('dockerUiApp').controller('EventsCtrl', [
                 {name: 'Id', field: 'id', filter: 'shortTag'},
                 {name: 'Event', field: 'status'},
                 {name: 'From', field: 'from'},
-                {name: 'Time', field: 'time', map: function (time) {return new Date(time * 1000); }, filter: {name: 'date', options: 'medium'}}
+                {
+                    name: 'Time',
+                    field: 'time',
+                    map: function (time) {
+                        return new Date(time * 1000);
+                    },
+                    filter: {name: 'date', options: 'medium'}
+                }
             ],
             globalFilter: true
         };

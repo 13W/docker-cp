@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 /**
  * User: Vladimir Bulyga <zero@ccxx.cc>
  * Project: docker-ui
@@ -128,8 +128,8 @@ angular.module('dockerUiApp').service('http', [
                 if (angular.isFunction(callback)) {
                     http.success(function (response, status) {
                         status = (!status || status > 400) ? 'error' : 'success';
-                        if (!response) {
-                            response = "Connection refused";
+                        if (!response && status === 'error') {
+                            response = 'Connection refused';
                         }
                         cb(status)(response);
                     }).error(cb('error'));

@@ -16,7 +16,7 @@ angular.module('dockerUiApp').controller('ImageCtrl', [
                 {
                     name: 'Created By',
                     field: 'CreatedBy',
-                    style: "max-width: 500px;white-space: nowrap; overflow: hidden; text-overflow: ellipsis;",
+                    style: 'max-width: 500px;white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
                     map: function () {
                         return '<span>{{ row.CreatedBy || \'\' }}</span>';
                     }
@@ -28,16 +28,20 @@ angular.module('dockerUiApp').controller('ImageCtrl', [
         };
 
         $scope.onTagAdded = function onTagAdded(tag) {
-            if (!Docker.parseTag(tag.text).name) {
+            if (!Docker.parseTag(tag).name) {
                 return false;
             }
-            Docker.tagImage({Id: image.Id, repo: tag.text});
+            var repoTags = $scope.image.info.RepoTags;
+            Docker.tagImage({Id: image.Id, repo: tag.text}).then(function () {
+                var index = repoTags.indexOf(tag);
+                repoTags.splice(index, 1);
+            });
         };
         $scope.onTagRemoved = function onTagRemoved(tag) {
-            if (!Docker.parseTag(tag.text).name) {
+            if (!Docker.parseTag(tag).name) {
                 return false;
             }
-            Docker.deleteImage({Id: tag.text || image.Id}, function (messages) {
+            Docker.deleteImage({Id: tag || image.Id}, function (messages) {
                 var lastMessage = messages.slice(-1)[0] || {};
                 if (lastMessage.Deleted === image.Id) {
                     $location.path('/images');

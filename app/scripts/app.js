@@ -3,9 +3,9 @@
 angular
     .module('dockerUiApp', [
         'ngCookies', 'ngResource', 'ngSanitize', 'ngRoute', 'ui.bootstrap', 'ui.bootstrap.modal', 'route-segment',
-        'view-segment', 'chieffancypants.loadingBar', 'ui.bootstrap.pagination', 'ui.bootstrap.progressbar', 'base64',
-        'ui.bootstrap.alert', 'ui.bootstrap.typeahead', 'ui.bootstrap.datepicker', 'ui.select', 'ngTagsInput',
-        'gd.ui.jsonexplorer'])
+        'view-segment', 'angular-loading-bar', 'ui.bootstrap.pagination', 'ui.bootstrap.progressbar', 'base64',
+        'ui.bootstrap.alert', 'ui.bootstrap.typeahead', 'ui.bootstrap.datepicker', 'ui.select',
+        'ngJsonExplorer', 'ui.bootstrap.carousel'])
     .config([
         '$routeProvider', '$locationProvider', '$routeSegmentProvider', 'cfpLoadingBarProvider',
         function ($routeProvider, $locationProvider, $routeSegmentProvider, cfpLoadingBarProvider) {
@@ -20,7 +20,7 @@ angular
                 .when('^/set/host/:value*', 'root.set')
                 .when('/info', 'root.info')
                 .when('/events', 'root.events')
-                .when('/container/create', 'root.createContainer')
+                //.when('/container/create', 'root.createContainer')
                 .when('/container/:containerId', 'root.container')
                 .when('/containers', 'root.containers')
                 .when('/images', 'root.images')
@@ -38,8 +38,8 @@ angular
                             '$q', '$cookies', '$location', 'Config', 'Docker',
                             function ($q, $cookies, $location, Config, Docker) {
                                 var defer = $q.defer();
-                                $cookies.docker_host = $cookies.docker_host || Config.host;
-                                Docker.connectTo($cookies.docker_host, function (error) {
+                                $cookies.dockerHost = $cookies.dockerHost || Config.host;
+                                Docker.connectTo($cookies.dockerHost, function (error) {
                                     defer.resolve();
                                     if (error) {
                                         $location.path('/hosts');

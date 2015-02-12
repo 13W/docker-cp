@@ -9,123 +9,173 @@
  */
 angular.module('dockerUiApp')
     .controller('CreateContainerCtrl', [
-        '$scope', 'Docker', '$filter', '$q', '$modalInstance', 'input',
-        function ($scope, Docker, $filter, $q, $modalInstance, input) {
+        '$scope', 'Docker', '$filter', '$q', '$location', '$modalInstance', 'input',
+        function ($scope, Docker, $filter, $q, $location, $modalInstance, input) {
+            function formatExposedPort(port, obj) {
+                obj = Array.isArray(obj) ? obj[0] : obj;
+                var result = [];
+                if (obj) {
+                    if (obj.HostIp) {
+                        result.push(obj.HostIp);
+                    }
+                    if (obj.HostPort) {
+                        result.push(obj.HostPort);
+                    }
+                }
+                result.push(port.split('/')[0]);
+                return result.join(':');
+            }
+
+            function parseExposedPort(str) {
+                var parsed = str.split(':'),
+                    result = {},
+                    port = parsed.pop(),
+                    ptr = {HostPort: parsed.pop()},
+                    proto = port.split('/')[1];
+
+                result[port + '/' + (proto || 'tcp')] = [ptr];
+
+                if (parsed.length) {
+                    ptr.HostIp = parsed.pop();
+                }
+
+                return result;
+            }
+
             $scope.input = input;
+            $scope.tmp = {
+                ExposedPorts: Object.keys(input.HostConfig.PortBindings).map(function (port) {
+                    return formatExposedPort(port, input.HostConfig.PortBindings[port]);
+                }),
+                Volumes: [],
+                Devices: [],
+                LxcConf: []
+            };
             $scope.images = [];
             $scope.containers = [];
+            $scope.containerNames = [];
 
-            function tagsToArray(tags) {
-                return (tags || [])
-                    .map(function (tag) {
-                        return tag.text;
-                    })
-                    .filter(function (value) {
-                        return !!value;
-                    });
-            }
+            Docker.images(function (items) {
+                $scope.images = items;
+            });
 
-            function filter(array, term) {
-                return $filter('filter')(array, term);
-            }
-
-            $scope.getImages = function (term) {
-                var def = $q.defer(),
-                    promise = def.promise,
-                    images;
-                if (!$scope.images.length) {
-                    promise = Docker.images(function (items) {
-                        images = items.map(function (image) {
-                            /** @namespace image.RepoTags */
-                            var name = image.RepoTags.slice(-1)[0];
-                            return name === '<none>:<none>' ? image.Id.substr(0, 12) : name;
-                        });
-                        $scope.images = filter(images, term);
-                    });
-                } else {
-                    def.resolve(filter($scope.images, term));
+            function parseCMD(command) {
+                if (angular.isArray(command)) {
+                    return command;
                 }
-                return promise;
-            };
-
-            $scope.getContainer = function (term) {
-                var def = $q.defer(),
-                    promise = def.promise;
-
-                if (!$scope.containers.length) {
-                    promise = Docker.containers({all: true}, function (containers) {
-                        $scope.containers = containers.map(function (container) {
-                            /** @namespace container.Names */
-                            return container.Names[0].substr(1);
-                        });
-                        return filter($scope.containers, term);
-                    });
-                } else {
-                    def.resolve(filter($scope.containers, term));
+                if (!command) {
+                    return [];
                 }
-
-                return promise;
-            };
-
-            $scope.ok = function () {
-                var Volumes = {}, PortBindings = {}, Binds = [], Container = angular.extend({}, $scope.input);
-                Container.Cmd = Container.Cmd || '';
-                Container.Cmd = (Container.Cmd.match(/(?:[^\s"]+|"[^"]*")+/g) || []).map(function (string) {
+                return command.match(/(?:[^\s"']+|"([^"]*)"|'([^']*)')+/g).map(function (string) {
                     var firstChar = string.substr(0, 1),
                         lastChar = string.substr(-1);
 
-                    //noinspection JSLint
-                    if ((firstChar === '"' && lastChar === '"' && firstChar === lastChar) ||
-                        (firstChar === "'" && lastChar === "'" && firstChar === lastChar)) {
+                    if ((firstChar === '"' && lastChar === '"') ||
+                        (firstChar === '\'' && lastChar === '\'')) {
                         string = string.slice(1, -1);
                     }
-
                     return string;
                 });
+            }
 
-                ['Env', 'Dns', 'ExposedPorts', 'PortSpecs', 'Volumes', 'Links'].forEach(function (prop) {
-                    if (Array.isArray(Container[prop])) {
-                        Container[prop] = tagsToArray(Container[prop]);
+            Docker.containers({all: true}, function (containers) {
+                $scope.containers = containers;
+                $scope.containerNames = containers.map(function (container) {
+                    var name = container.Names[0];
+                    return name && name.substr(1) || container.Id.substr(0, 12);
+                });
+            });
+            $scope.networkTypes = ['none', 'bridge', 'host', 'container'];
+            $scope.restartPolicies = ['none', 'always', 'on-failure'];
+            $scope.loadConfig = function loadConfig() {
+                Docker.inspectImage({Id: $scope.input.Image[0]}, function (image) {
+                    $scope.input = angular.extend({}, image.Config, $scope.input);
+                });
+            };
+            $scope.addExposedPort = function addExposedPort($item) {
+                var exposedPort = parseExposedPort($item);
+                angular.extend($scope.input.ExposedPorts, exposedPort);
+                angular.extend($scope.input.HostConfig.PortBindings, exposedPort);
+            };
+            $scope.removeExposedPort = function removeExposedPort($item) {
+                var exposedPort = Object.keys(parseExposedPort($item))[0];
+                delete $scope.input.ExposedPorts[exposedPort];
+                delete $scope.input.HostConfig.PortBindings[exposedPort];
+            };
+            $scope.addDevice = function addDevice($item) {
+                var parsed = $item.split(':');
+                $scope.input.HostConfig.Devices.push({
+                    PathOnHost: parsed.shift(),
+                    PathInContainer: parsed.shift(),
+                    CgroupPermissions: parsed.shift()
+                });
+            };
+            $scope.removeDevice = function removeDevice($item) {
+                var parsed = $item.split(':'),
+                    index = -1;
+                $scope.input.HostConfig.Devices.some(function (device, i) {
+                    if (device.PathOnHost === parsed[0] &&
+                        device.PathInContainer === parsed[1] &&
+                        device.CgroupPermissions === parsed[2]) {
+                        index = i;
+                        return true;
                     }
                 });
-
-                if (!Container.VolumesFrom.length) {
-                    delete Container.VolumesFrom;
+                if (index !== -1) {
+                    $scope.input.HostConfig.Devices.splice(index, 1);
                 }
-                if (!Container.Volumes.length) {
-                    delete Container.Volumes;
-                } else {
+            };
+            $scope.addVolume = function addVolume($item) {
+                var parsed = $item.split(':');
+                $scope.input.Volumes[parsed[1] || parsed[0]] = {};
+            };
+            $scope.removeVolume = function removeVolume($item) {
+                var parsed = $item.split(':');
+                delete $scope.input.Volumes[parsed[1] || parsed[0]];
+            };
+            $scope.addLxcConf = function addLxcConf($item) {
+                var parsed = $item.split(':');
+                $scope.input.HostConfig.LxcConf[parsed[0]] = parsed[1];
+            };
+            $scope.removeLxcConf = function removeLxcConf($item) {
+                var parsed = $item.split(':');
+                delete $scope.input.HostConfig.LxcConf[parsed[0]];
+            };
+            $scope.ok = function () {
+                var Volumes = {},
+                    Container = angular.extend({}, $scope.input);
+
+                Container.Cmd = parseCMD(Container.Cmd);
+
+                if (Container.Volumes && Container.Volumes.length) {
                     Container.Volumes.forEach(function (volume) {
                         var parsed = volume.split(':'); // hostPath:containerPath:permission
                         Volumes[parsed[1]] = {};
-                        Binds.push(volume);
+                        Container.HostConfig.Binds.push(volume);
                     });
                     Container.Volumes = Volumes;
                 }
 
-                if (Container.ExposedPorts.length) {
-                    Container.ExposedPorts.forEach(function (record) {
-                        record = record.split(':').reverse();
-                        var containerPort = record[0] + '/tcp',
-                            hostPort = {"HostPort": record[1] || record[0]},
-                            hostIp = {"HostIp": record[2]};
-                        PortBindings[containerPort] = [angular.extend({}, hostIp, hostPort)];
-                    });
+                Container.Image = Array.isArray(Container.Image) ? Container.Image[0] : Container.Image;
+                if (Container.HostConfig.NetworkMode === 'container') {
+                    if ($scope.input.NetContainer) {
+                        Container.HostConfig.NetworkMode = 'container:' + $scope.input.NetContainer.substr(1);
+                    } else {
+                        delete Container.HostConfig.NetworkMode;
+                    }
                 }
+                angular.extend(Container, Container.HostConfig);
+                console.log(Container);
+
                 Docker.create(Container, function (container) {
-                    Docker.start({
-                        Id: container.Id,
-                        Links: Container.Links,
-                        LxcConf: Container.LxcConf,
-                        Dns: Container.Dns,
-                        VolumesFrom: Container.VolumesFrom,
-                        Binds: Binds,
-                        PortBindings: PortBindings
-                    }, function () {
+                    Docker.start(angular.extend({Id: container.Id}, Container.HostConfig), function () {
+                        $location.path('/container/' + container.Id.substr(0, 12));
                         $modalInstance.close(container);
                     });
                 });
             };
-            $scope.close = $modalInstance.dismiss.bind($modalInstance);
+            $scope.cancel = function () {
+                $modalInstance.close();
+            };
         }
     ]);

@@ -10,7 +10,7 @@ angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
             Docker.searchImage({term: $scope.imageSearch}, function (images) {
                 images.forEach(function (image) {
                     /** @namespace image.star_count */
-                    $scope.maxRate = $scope.maxRate >= image.star_count ? $scope.maxRate : image.star_count;
+                    $scope.maxRate = $scope.maxRate >= image['star_count'] ? $scope.maxRate : image['star_count']; // jshint ignore:line
                 });
                 $scope.images = images;
             });
@@ -18,7 +18,8 @@ angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
 
         //noinspection JSUnusedLocalSymbols,JSLint
         function star(e, data, alt) {
-            return '<i class="glyphicon glyphicon-star' + (!e ? '-empty' : '') + '"' + (alt !== undefined ? ' title="' + alt + '"' : '') + '></i>';
+            return '<i class="glyphicon glyphicon-star' + (!e ? '-empty' : '') + '"' +
+                (alt !== undefined ? ' title="' + alt + '"' : '') + '></i>';
         }
 
         function rating(e) {
@@ -43,7 +44,7 @@ angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
                     controller: ['$scope', '$modalInstance', function ($modalScope, $modalInstance) {
                         $modalScope.image = image;
                         $modalScope.tags = tags.data;
-                        $modalScope.selected = {tag: 'latest'};
+                        $modalScope.selected = {tag: {name: 'latest'}};
                         $modalScope.ok = function ok() {
                             $modalInstance.close();
                             callback(null, $modalScope.selected.tag);
@@ -72,14 +73,16 @@ angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
                         return $scope.progress;
                     }
                 },
-                controller: ['$scope', '$modalInstance', 'image', 'progress', function ($modalScope, $modalInstance, image, progress) {
-                    $modalScope.image = image;
-                    $modalScope.progress = progress;
-                    $modalScope.tag = tag;
-                    $modalScope.background = function background() {
-                        $modalInstance.close();
-                    };
-                }]
+                controller: ['$scope', '$modalInstance', 'image', 'progress',
+                    function ($modalScope, $modalInstance, image, progress) {
+                        $modalScope.image = image;
+                        $modalScope.progress = progress;
+                        $modalScope.tag = tag;
+                        $modalScope.background = function background() {
+                            $modalInstance.close();
+                        };
+                    }
+                ]
             });
 
             Docker.createImage({
@@ -118,6 +121,15 @@ angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
             });
         };
 
+        $scope.download = function (image) {
+            image = image || {name: $scope.imageSearch};
+            $scope.selectImageTag(image, function (canceled, tag) {
+                if (!canceled) {
+                    $scope.downloadImage(image, tag.name);
+                }
+            });
+        };
+
         $scope.imagesOpts = {
             colDef      : [
                 {name: 'Name', field: 'name'},
@@ -127,22 +139,17 @@ angular.module('dockerUiApp').controller('ImagesSearchCtrl', [
                 {
                     name: 'Description',
                     field: 'description',
-                    style: "max-width: 500px;white-space: nowrap; overflow: hidden; text-overflow: ellipsis;",
+                    style: 'max-width: 500px;white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
                     map: function () {
-                        return '<span data-popover="{{ row.description }}" data-popover-trigger="mouseenter">{{ row.description }}</span>';
+                        return '<span data-popover="{{ row.description }}" ' +
+                            'data-popover-trigger="mouseenter">{{ row.description }}</span>';
                     }
                 },
                 {name     : 'Actions', buttons: [
                     {
                         name : '<i class="glyphicon glyphicon-download"></i> Download',
                         class: 'btn btn-xs btn-primary',
-                        click: function (image) {
-                            $scope.selectImageTag(image, function (canceled, tag) {
-                                if (!canceled) {
-                                    $scope.downloadImage(image, tag.name);
-                                }
-                            });
-                        }
+                        click: $scope.download
                     }
                 ], compile: true}
             ],

@@ -27,13 +27,11 @@ angular.module('dockerUiApp')
 
                 function bind(event) {
                     socket['on' + event.toLowerCase()] = function () {
-                        var scope = this,
+                        var self = this,
                             args = arguments;
                         angular.forEach(socket.clients, function (client) {
                             if (angular.isFunction(client['on' + event])) {
-                                setImmediate(function () {
-                                    client['on' + event].apply(scope, args);
-                                });
+                                client['on' + event].apply(self, args);
                             }
                         });
                     };

@@ -17,7 +17,7 @@
             <ul class="nav navbar-nav">
                 <li data-ng-model="currentLocation" btn-radio="'/hosts'">
                     <a href="#!/hosts" style="padding-bottom: 0;padding-top: 10px;text-align: center;">Hosts<br/>
-                        <sup style="font-weight: bold;color: green;">{{docker_host}}</sup>
+                        <sup style="font-weight: bold;color: green;">{{dockerHost}}</sup>
                     </a>
                 </li>
                 <li data-ng-model="currentLocation" btn-radio="'/containers'"><a href="#!/containers">Containers</a></li>
@@ -59,6 +59,16 @@
 </nav>
 <alert style="position: fixed;top: 0; width: 600px;right: 150px;z-index: 1001;word-break: break-all;" class="pull-right" data-ng-show="alert.value" type="alert.value.type" data-close="alert.value=null">{{alert.value.msg}}</alert>
 <div data-app-view-segment="1" class="navbar-form"></div>
+<!--
+<ui-select ng-model="input.Image" theme="bootstrap">
+    <ui-select-match
+        placeholder="Enter image name...">{{$select.selected.RepoTags[0]}}</ui-select-match>
+    <ui-select-choices repeat="img.RepoTags as img in images | filter: $select.search">
+        <div ng-bind-html="img.RepoTags[0] | highlight: $select.search"></div>
+    </ui-select-choices>
+</ui-select>
+{{images | json}}
+-->
 <div class="navbar navbar-inner  navbar-fixed-bottom copyright">
     <a class="btn-link pull-right small" target="_blank" href="https://github.com/13W" style="margin-top: 30px;margin-right: 5px;">2014 &copy; Vladimir Bulyga</a>
 </div>

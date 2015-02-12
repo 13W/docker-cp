@@ -132,6 +132,9 @@ angular.module('dockerUiApp').controller('ContainerCtrl', [
         $scope.clone = function () {
             var config = angular.extend({}, $scope.container.Config, {HostConfig: $scope.container.HostConfig});
             delete config.Id;
+            if (config.Image.indexOf(':') === -1) {
+                config.Image += ':latest';
+            }
             Dialogs.createContainer(config);
         };
 

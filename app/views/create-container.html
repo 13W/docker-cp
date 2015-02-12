@@ -58,7 +58,7 @@
                             <ui-select ng-model="input.Image" theme="bootstrap">
                                 <ui-select-match
                                     placeholder="Enter image name...">{{$select.selected.RepoTags[0]}}</ui-select-match>
-                                <ui-select-choices repeat="img.RepoTags as img in images | filter: $select.search">
+                                <ui-select-choices repeat="img.RepoTags[0] as img in images | filter: $select.search">
                                     <div ng-bind-html="img.RepoTags[0] | highlight: $select.search"></div>
                                 </ui-select-choices>
                             </ui-select>
@@ -415,15 +415,14 @@
                             </ui-select>
                         </div>
                     </div>
-                    {{input.HostConfig | json}}
                 </fieldset>
             </slide>
         </carousel>
     </form>
 </div>
 <div class="modal-footer">
-    <button class="btn" data-ng-click="$$childHead.$$nextSibling.prev()">Prev</button>
-    <button class="btn" data-ng-click="$$childHead.$$nextSibling.next()">Next</button>
+    <button class="btn" data-ng-click="prev()">Prev</button>
+    <button class="btn" data-ng-click="next()">Next</button>
     <button class="btn" data-ng-click="cancel()">Cancel</button>
     <button class="btn btn-primary" data-ng-click="ok()">Create</button>
 </div>

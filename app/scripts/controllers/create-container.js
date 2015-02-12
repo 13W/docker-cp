@@ -141,6 +141,12 @@ angular.module('dockerUiApp')
                 var parsed = $item.split(':');
                 delete $scope.input.HostConfig.LxcConf[parsed[0]];
             };
+            $scope.prev = function prev() {
+                angular.element(document.getElementsByClassName('carousel-indicators')[0]).scope().prev();
+            };
+            $scope.next = function prev() {
+                angular.element(document.getElementsByClassName('carousel-indicators')[0]).scope().next();
+            };
             $scope.ok = function () {
                 var Volumes = {},
                     Container = angular.extend({}, $scope.input);

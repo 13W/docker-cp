@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('dockerUiApp').controller('HostsCtrl', [
-    '$rootScope', '$scope', '$location', 'Docker', 'hosts',
-    function ($rootScope, $scope, $location, Docker, hosts) {
+    '$rootScope', '$scope', '$location', '$cookies', 'Docker', 'hosts',
+    function ($rootScope, $scope, $location, $cookies, Docker, hosts) {
         function normalize(hosts) {
             var result = [],
                 host;
@@ -36,6 +36,22 @@ angular.module('dockerUiApp').controller('HostsCtrl', [
         };
 
         $scope.hostsOpts = {
+            showSelection: true,
+            actionButtons: [
+                {
+                    name: 'Delete',
+                    class: 'btn-warning',
+                    onSelection: true,
+                    click: ['selection', function (hosts) {
+                        var dockerHosts = Docker.hosts();
+                        hosts.forEach(function (host) {
+                            delete dockerHosts[host.url];
+                        });
+                        $cookies.dockerHosts = JSON.stringify(dockerHosts);
+                        return true;
+                    }]
+                }
+            ],
             colDef      : [
                 {name: 'URL', field: 'url'},
                 {name: 'last connected', field: 'lastConnected', filter: {name: 'date', options: 'mediumDate'}},

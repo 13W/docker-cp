@@ -63,7 +63,5 @@ angular.module('dockerUiApp').controller('ImageCtrl', [
             });
         };
 
-        $scope.$on('$routeChangeSuccess', function () {
-            $routeSegment.chain.slice(-1)[0].reload();
-        });
+        $scope.$on('$routeChangeSuccess', $scope.$reload);
     }]);

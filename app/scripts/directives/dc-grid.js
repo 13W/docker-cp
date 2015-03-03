@@ -8,9 +8,9 @@ angular.module('dockerUiApp').directive('ngAppendHtml', [
     }
 ]);
 angular.module('dockerUiApp').directive('dcGrid', [
-    '$compile', '$parse', '$rootScope', '$filter',
-    function ($compile, $parse, $rootScope, $filter) {
-        //noinspection JSLint
+    '$compile', '$parse', '$rootScope', '$filter', '$injector', '$q',
+    function ($compile, $parse, $rootScope, $filter, $injector, $q) {
+
         return {
             templateUrl: 'views/dc-grid.html',
             restrict: 'E',
@@ -29,7 +29,15 @@ angular.module('dockerUiApp').directive('dcGrid', [
                 var filtered = [],
                     progress = false;
 
+                function resetSelection() {
+                    scope.selection = {
+                        selectAll: false,
+                        selected: {}
+                    };
+                }
                 function init(rows) {
+                    resetSelection();
+
                     if (!rows.length) {
                         scope.rows = [];
                         return;
@@ -77,7 +85,35 @@ angular.module('dockerUiApp').directive('dcGrid', [
                 scope.sortDown = function (field) {
                     return scope.sortBy === field && scope.sortOrder === false;
                 };
-
+                function updateSelectAllState() {
+                    scope.selection.selectAll = Object.keys(scope.selection.selected).length === scope.rows.length;
+                }
+                scope.invertSelection = function invertSelection(index) {
+                    if (!scope.selection.selected[index]) {
+                        scope.selection.selected[index] = true;
+                    } else {
+                        delete scope.selection.selected[index];
+                    }
+                    updateSelectAllState();
+                };
+                scope.invertSelectAll = function invertSelectionAll() {
+                    scope.rows.forEach(function (row, index) {
+                        if (scope.selection.selectAll && scope.selection.selected[index]) {
+                            delete scope.selection.selected[index];
+                        } else if (!scope.selection.selectAll) {
+                            scope.selection.selected[index] = true;
+                        }
+                    });
+                    scope.selection.selectAll = !scope.selection.selectAll;
+                };
+                scope.selectionLength = function selectionLength() {
+                    return Object.keys(scope.selection.selected).length;
+                };
+                scope.getSelection = function getSelection() {
+                    return Object.keys(scope.selection.selected).map(function (index) {
+                        return scope.rows[index];
+                    });
+                };
                 if (scope.options.globalFilter) {
                     $rootScope.$watch('search.value', function (value) {
                         if (progress) {
@@ -94,7 +130,36 @@ angular.module('dockerUiApp').directive('dcGrid', [
                     }
                     return '';
                 };
-
+                scope.showActionsMenu = (scope.options.actionButtons || []).some(function (button) {
+                    return button.dropdown === true;
+                });
+                scope.actionActive = function actionActive(button) {
+                    return button.onSelection && !!scope.selectionLength() ||
+                        !button.onSelection && (!button.cardinality || button.cardinality === scope.selectionLength());
+                };
+                scope.fireAction = function fireAction(button) {
+                    if (!scope.actionActive(button)) {
+                        return;
+                    }
+                    var locals = {
+                        $scope: scope,
+                        selection: scope.getSelection()
+                    };
+                    var result = $injector.invoke(button.click, {}, locals);
+                    if (result) {
+                        $q.when(result).then($rootScope.$reload);
+                    }
+                };
+                scope.isItemVisible = function isItemVisible(button) {
+                    if (!button.visible) {
+                        return true;
+                    }
+                    var locals = {
+                        $scope: scope,
+                        selection: scope.getSelection()
+                    };
+                    return $injector.invoke(button.visible, {}, locals);
+                };
                 scope.get = function (data, def) {
                     var getter = $parse(def.field),
                         value = getter(scope, data),
@@ -143,4 +208,5 @@ angular.module('dockerUiApp').directive('dcGrid', [
                 };
             }
         };
-    }]);
+    }
+]);

@@ -1,6 +1,11 @@
 <div>
+    <style>
+        .pager {
+            margin-bottom: 0;
+        }
+    </style>
     <div class="row">
-        <div class="col-sm-3">
+        <div class="col-sm-2">
             <pager data-ng-model="currentPage"
                    total-items="totalItems"
                    items-per-page="maxSize"
@@ -9,13 +14,38 @@
                    next-text="Next »"
                 ></pager>
         </div>
-        <div class="pager col-sm-2 center-block" style="padding-top: 6px;">
+        <div class="col-sm-1 center-block" style="padding-top: 25px;">
             Page: {{ currentPage }} / {{ numPages }}
+        </div>
+        <div class="btn-group pull-right center-block" dropdown data-ng-show="showActionsMenu"
+             style="padding-top: 25px;margin-right: 15px;">
+            <button type="button" class="btn btn-primary dropdown-toggle" dropdown-toggle>
+                Actions <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+                <li data-ng-repeat="button in options.actionButtons | filter:{dropdown:true}"
+                    data-ng-show="isItemVisible(button)">
+                    <a href="#" class="{{button.class}}" data-ng-click="fireAction(button)"
+                       data-ng-disabled="!actionActive(button)">{{button.name}}</a>
+                </li>
+            </ul>
+    </div>
+        <div class="pull-right center-block" style="padding-top: 25px;margin-right: 15px;">
+            <button style="margin-left: 2px;"
+                    data-ng-repeat="button in options.actionButtons | filter:{dropdown:undefined}"
+                    class="btn {{button.class}}" data-ng-click="fireAction(button)"
+                    data-ng-disabled="!actionActive(button)" data-ng-show="isItemVisible(button)"
+                >{{button.name}}</button>
         </div>
     </div>
     <table class="table table-hover">
         <thead>
         <tr>
+            <th style="width: 25px;" data-ng-show="options.showSelection"><i class="glyphicon"
+                   data-ng-class='{"glyphicon-check": selection.selectAll, "glyphicon-unchecked": !selection.selectAll}'
+                   data-ng-click="invertSelectAll()"
+                ></i>
+            </th>
             <th data-ng-repeat="def in options.colDef" data-ng-click="sort(def.field)" style="cursor: pointer;">
                 <i data-ng-class='{"glyphicon-chevron-up": sortUp(def.field), "glyphicon-chevron-down": sortDown(def.field)}' class="glyphicon"></i>{{ def.name }}
             </th>
@@ -25,6 +55,12 @@
         <tr data-ng-repeat-start="row in rows"
             data-ng-class="rowClass(row)"
             style="min-width: 50px;">
+            <td data-ng-show="options.showSelection">
+                <i class="glyphicon"
+                   data-ng-class='{"glyphicon-check": selection.selected[$index], "glyphicon-unchecked": !selection.selected[$index]}'
+                   data-ng-click="invertSelection($index)"
+                    ></i>
+            </td>
             <td data-ng-repeat="def in options.colDef"
                 data-ng-append-html="get(row, def)"
                 data-ng-compile="def.compile"

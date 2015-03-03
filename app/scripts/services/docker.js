@@ -247,6 +247,19 @@ angular.module('dockerUiApp').service('Docker', [
             return request;
         };
 
+        Docker.prototype.stats = function (options, progressHandler, callback) {
+            var opts = {
+                    url: Config.host + '/containers/' + options.Id + '/stats',
+                    method: 'GET',
+                    parseStream: true,
+                    progressHandler: progressHandler
+                },
+                request = stream.request(opts);
+
+            request.then(callback);
+            return request;
+        };
+
         Docker.prototype.logs = function (options, progressHandler, callback) {
             var query = [], opts, request;
             ['stderr', 'stdout', 'tail'].forEach(function (param) {

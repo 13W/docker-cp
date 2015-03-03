@@ -36,18 +36,16 @@ angular.module('dockerUiApp').config([
         }]);
     }])
     .controller('MainCtrl', [
-        '$scope', '$log', '$rootScope', '$location', '$cookies', '$base64', 'cfpLoadingBar', 'Docker', 'Config',
-        function ($scope, $log, $rootScope, $location, $cookies, $base64, cfpLoadingBar, Docker, Config) {
+        '$scope', '$rootScope', '$routeSegment', '$location', '$cookies', '$base64', 'Docker', 'Config',
+        function ($scope, $rootScope, $routeSegment, $location, $cookies, $base64, Docker, Config) {
             $rootScope.search = $scope.search = {value: ''};
             $rootScope.alert = $scope.alert = {value: null};
             $scope.currentLocation = $location.$$path.split('/').slice(0, 2).join('/');
             $scope.dockerHost = $rootScope.dockerHost || Config.host;
 
-            $scope.input = {
-                Image: ''
+            $rootScope.$reload = function $reload() {
+                $routeSegment.chain.slice(-1)[0].reload();
             };
-            $scope.images = [{RepoTags: ['hello']}, {RepoTags: ['world']}, {RepoTags: ['pipec']}];
-
             $rootScope.$watch('dockerHost', function (dockerHost) {
                 if (dockerHost !== $scope.dockerHost) {
                     $scope.dockerHost = $rootScope.dockerHost || Config.host;
@@ -57,9 +55,6 @@ angular.module('dockerUiApp').config([
             $rootScope.$on('$routeChangeSuccess', function (event, next) {
                 $scope.currentLocation = (next.$$route && next.$$route.originalPath) ||
                                          $location.$$path.split('/').slice(0, 2).join('/');
-                if (cfpLoadingBar.status()) {
-                    cfpLoadingBar.complete();
-                }
             });
 
             if ($cookies.auth) {
@@ -69,12 +64,10 @@ angular.module('dockerUiApp').config([
                     Docker.auth($scope.auth, function (response) {
                         if (response.Status !== 'Login Succeeded') {
                             $scope.auth = $rootScope.auth = $cookies.auth = '';
-                            $log.error('Auth error', response);
                         }
                         delete $scope.auth.password;
                     });
                 } catch (e) {
-                    $log.error('Failed to parse cookies');
                     $scope.auth = $rootScope.auth = $cookies.auth = '';
                 }
             }
@@ -89,4 +82,5 @@ angular.module('dockerUiApp').config([
                     }
                 });
             };
-        }]);
+        }
+    ]);
